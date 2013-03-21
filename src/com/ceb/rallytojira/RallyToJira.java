@@ -2,13 +2,10 @@ package com.ceb.rallytojira;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Iterator;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.ClientResponse;
 
 public class RallyToJira {
 
@@ -28,39 +25,44 @@ public class RallyToJira {
 	}
 
 	private void process() throws IOException {
-		// System.out.println(rally.getWsapiVersion());
-		// QueryResponse projects = rally.getAllProjects();
-		// JsonArray l = projects.getResults();
-		// Iterator<JsonElement> pi = l.iterator();
-		// while (pi.hasNext()) {
-		// JsonObject jo = pi.next().getAsJsonObject();
-		// System.out.println(jo.get("Name"));
-		// }
+		JsonArray projects = rally.getAllProjects();
+		for (JsonElement project : projects) {
+			JsonObject jProject = project.getAsJsonObject();
+			String projectName = jProject.get("Name")
+					.getAsString();
+			if ("Discussions".equals(projectName)) {
+				System.out.println(projectName);
+				JsonArray releases = rally.getReleasesForProject(jProject);
+				for (JsonElement release : releases) {
+					String releaseName = release.getAsJsonObject().get("Name")
+							.getAsString();
+					System.out.println(releaseName);
+				}
+				JsonArray iterations = rally
+						.getIterationsForProject(jProject);
+				for (JsonElement iteration : iterations) {
+					String iterationName = iteration.getAsJsonObject()
+							.get("Name").getAsString();
+					System.out.println(iterationName);
+				}
+				JsonArray userStories = rally
+						.getUserStoriesForProject(jProject);
+				for (JsonElement userStory : userStories) {
+					String userStoryName = userStory.getAsJsonObject()
+							.get("Name").getAsString();
+					System.out.println(userStoryName);
+				}
+				JsonArray defects = rally.getDefectsForProject(jProject);
+				for (JsonElement defect : defects) {
+					String defectName = defect.getAsJsonObject().get("Name")
+							.getAsString();
+					System.out.println(defectName);
+				}
+			}
 
-//		ClientResponse response = jira.getAllProjects();
-//		String strResp = response.getEntity(String.class);
-//		JsonElement je = (new JsonParser()).parse(strResp);
-//		if (je.isJsonObject()) {
-//			JsonObject jo = je.getAsJsonObject();
-//			System.out.println(jo);
-//		} else {
-//			if (je.isJsonArray()) {
-//				JsonArray ja = je.getAsJsonArray();
-//				Iterator<JsonElement> pi = ja.iterator();
-//				while (pi.hasNext()) {
-//					JsonObject jo = pi.next().getAsJsonObject();
-//					System.out.println(jo);
-//				}
-//			}
-//		}
-
-//		ClientResponse response = jira.createIssue();
-//		String strResp = response.getEntity(String.class);
-//		System.out.println(strResp);
-		ClientResponse response = jira.attachFile();
-		String strResp = response.getEntity(String.class);
-		System.out.println(strResp);
-	
+			System.out
+					.println("------------------------------------------------------------");
 		}
+	}
 
 }

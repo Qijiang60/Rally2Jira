@@ -6,7 +6,7 @@ import java.net.URISyntaxException;
 import com.ceb.rallytojira.rest.api.JiraRestApi;
 import com.rallydev.rest.RallyRestApi;
 
-public class JiraJSONClient {
+public class JiraJsonClient {
 
 	public JiraRestApi getJiraRestApi() throws URISyntaxException {
 		return new JiraRestApi(new URI("http://scrumportal.executiveboard.com"),

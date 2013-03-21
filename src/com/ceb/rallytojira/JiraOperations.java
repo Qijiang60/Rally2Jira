@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.ceb.rallytojira.rest.api.JiraRestApi;
-import com.ceb.rallytojira.rest.client.JiraJSONClient;
+import com.ceb.rallytojira.rest.client.JiraJsonClient;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.ClientResponse;
 
@@ -16,7 +16,7 @@ public class JiraOperations {
 	JiraRestApi api;
 
 	public JiraOperations() throws URISyntaxException {
-		JiraJSONClient client = new JiraJSONClient();
+		JiraJsonClient client = new JiraJsonClient();
 		api = client.getJiraRestApi();
 	}
 
