@@ -50,7 +50,13 @@ public class RallyToJira {
 				for (JsonElement userStory : userStories) {
 					String userStoryName = userStory.getAsJsonObject()
 							.get("Name").getAsString();
-					System.out.println(userStoryName);
+					JsonElement userStoryIteration = userStory.getAsJsonObject()
+							.get("Iteration");
+					String userStoryIterationName = "";
+					if(userStoryIteration.isJsonObject()){
+						userStoryIterationName = userStoryIteration.getAsJsonObject().get("Name").getAsString();
+					}
+					System.out.println(userStoryName + " | " + userStoryIterationName);
 				}
 				JsonArray defects = rally.getDefectsForProject(jProject);
 				for (JsonElement defect : defects) {

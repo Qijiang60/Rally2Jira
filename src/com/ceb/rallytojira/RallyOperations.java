@@ -53,6 +53,7 @@ public class RallyOperations {
 		List<String> dataElements = new ArrayList<String>();
 		dataElements.add("FormattedID");
 		dataElements.add("Name");
+		dataElements.add("Iteration");
 		return getArtifactsForProject(RallyObject.USER_STORY, project,
 				dataElements);
 
