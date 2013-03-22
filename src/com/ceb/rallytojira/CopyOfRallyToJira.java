@@ -2,12 +2,7 @@ package com.ceb.rallytojira;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Iterator;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
 
 public class CopyOfRallyToJira {

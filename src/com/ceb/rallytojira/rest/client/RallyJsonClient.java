@@ -38,7 +38,7 @@ public class RallyJsonClient {
 				if (queryFilter == null) {
 					queryFilter = tempFilter;
 				} else {
-					queryFilter.and(tempFilter);
+					queryFilter = queryFilter.and(tempFilter);
 				}
 			}
 			request.setQueryFilter(queryFilter);

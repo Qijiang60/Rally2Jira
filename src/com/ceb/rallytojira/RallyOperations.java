@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.RallyJsonClient;
+import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -28,11 +29,19 @@ public class RallyOperations {
 
 	}
 
+	public JsonArray getProjectByName(String name) throws IOException {
+		List<String> dataElements = new ArrayList<String>();
+		dataElements.add("ObjectID");
+		dataElements.add("Name");
+		Map<String, String> filter = new LinkedHashMap<String, String>();
+		filter.put("Name", name);
+		return client.searchObjects(RallyObject.PROJECT, filter, dataElements);
+	}
+
 	public JsonArray getReleasesForProject(JsonObject project)
 			throws IOException {
-		List<String> dataElements = new ArrayList<String>();
-		dataElements.add("FormattedID");
-		dataElements.add("Name");
+		List<String> dataElements = Utils.elementsTobeFetched(
+				Utils.getJsonObjectName(project), RallyObject.RELEASE);
 		return getArtifactsForProject(RallyObject.RELEASE, project,
 				dataElements);
 
@@ -73,6 +82,18 @@ public class RallyOperations {
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("Project.ObjectID", project.get("ObjectID").getAsString());
 		return client.searchObjects(artifactType, filter, dataElements);
+
+	}
+
+	public JsonArray getUserStoriesForProjectAndRelease(JsonObject project,
+			JsonObject release) throws IOException {
+		List<String> dataElements = Utils.elementsTobeFetched(
+				Utils.getJsonObjectName(project), RallyObject.USER_STORY);
+		Map<String, String> filter = new LinkedHashMap<String, String>();
+		filter.put("Project.ObjectID", project.get("ObjectID").getAsString());
+		//filter.put("Release.ObjectID", release.get("ObjectID").getAsString());
+		return client.searchObjects(RallyObject.USER_STORY, filter,
+				dataElements);
 
 	}
 }

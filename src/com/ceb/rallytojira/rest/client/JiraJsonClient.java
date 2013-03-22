@@ -4,7 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import com.ceb.rallytojira.rest.api.JiraRestApi;
-import com.rallydev.rest.RallyRestApi;
 
 public class JiraJsonClient {
 

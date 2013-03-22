@@ -4,11 +4,6 @@ import javax.naming.AuthenticationException;
 
 import org.json.JSONException;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.Base64;
-
 public class JerseyTest {
 	public static void main(String[] args) throws AuthenticationException, JSONException {
 		JerseyTest.getAllIssues("hagarwal", "Welcome234!",
