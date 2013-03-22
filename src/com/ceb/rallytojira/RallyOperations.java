@@ -91,7 +91,7 @@ public class RallyOperations {
 				Utils.getJsonObjectName(project), RallyObject.USER_STORY);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("Project.ObjectID", project.get("ObjectID").getAsString());
-		//filter.put("Release.ObjectID", release.get("ObjectID").getAsString());
+		filter.put("Release.ObjectID", release.get("ObjectID").getAsString());
 		return client.searchObjects(RallyObject.USER_STORY, filter,
 				dataElements);
 

@@ -40,12 +40,14 @@ public class RallyToJira {
 			String versionId = jira.findProjectVersionByName(jProject,
 					Utils.getJsonObjectName(jRelease));
 			JsonArray userStories = rally.getUserStoriesForProjectAndRelease(jProject, jRelease);
-			System.out.println(userStories.size());
-			int topLevelUserStoryCount = 0;
 			for(JsonElement userStory : userStories){
-				System.out.println(userStory.getAsJsonObject().get("FormattedID"));
 				if(userStory.getAsJsonObject().get("Parent").isJsonNull()){
-					topLevelUserStoryCount++;
+					//jira.createIssue(userStory);
+				}else{
+					System.out.println(userStory.getAsJsonObject().get("Parent").getAsJsonObject().get("FormattedID"));
+					//jira.createIssue(parentUserStory);
+					//jira.createSubTask(userStory);
+					
 				}
 				//jira.createIssueInVersionFromUserStory(jProject, versionId, userStory.getAsJsonObject());
 			}
