@@ -1,0 +1,11 @@
+JIRA,Rally
+customfield_10200,FormattedID
+summary,Name
+description,Description
+labels[],Tags._refObjectName
+assignee.name,Owner._refObjectName
+NULL,ObjectID
+NULL,WorkProduct
+NULL,Release
+NULL,Project
+
