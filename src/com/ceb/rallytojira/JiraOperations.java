@@ -1,5 +1,6 @@
 package com.ceb.rallytojira;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -74,9 +75,9 @@ public class JiraOperations {
 		return versions;
 	}
 
-	public ClientResponse attachFile() throws IOException {
+	public ClientResponse attachFile(String issueKey, File file) throws IOException {
 
-		return api.doMultipartPost("/rest/api/latest/issue/DISC-1/attachments", "abc");
+		return api.doMultipartPost("/rest/api/latest/issue/"+issueKey+"/attachments", file);
 
 	}
 
@@ -141,20 +142,19 @@ public class JiraOperations {
 		return null;
 	}
 
-	public JsonObject createSubUserStory(JsonObject project, String versionId, JsonObject userStory, JsonObject jiraParentIssue) throws Exception {
-		userStory.add("jira-parent-key", jiraParentIssue.get("key"));
-		return createIssueInJira(project, versionId, userStory, RallyObject.USER_STORY, "Sub-story");
-
-	}
-
 	public void deleteAllIssues(JsonObject project) throws IOException {
-		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectNameForRallyProject(project) + "&maxResults=100";
+		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectNameForRallyProject(project) + "&maxResults=200";
 		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
 		for (JsonElement issue : issues) {
 			String issueKey = issue.getAsJsonObject().get("key").getAsString();
 			api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
 		}
 
+	}
+
+	public JsonObject getRallyAttachment(String URL) {
+		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(api.doRallyGet(URL));
+		return jResponse;
 	}
 
 }

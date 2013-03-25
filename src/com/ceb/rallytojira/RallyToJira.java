@@ -1,9 +1,13 @@
 package com.ceb.rallytojira;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.codec.binary.Base64;
 
 import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.Utils;
@@ -17,7 +21,7 @@ public class RallyToJira {
 	JiraOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
-	int limit = 4000;
+	int limit = 4;
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -33,13 +37,13 @@ public class RallyToJira {
 
 	private void deleteAllIssuesInJira(JsonObject project) throws IOException {
 		jira.deleteAllIssues(project);
-		
+
 	}
 
 	private void process() throws Exception {
 		JsonObject project = rally.getProjectByName("Discussions").get(0).getAsJsonObject();
 		deleteAllIssuesInJira(project);
-		//createReleases(project);
+		createReleases(project);
 	}
 
 	private void createReleases(JsonObject project) throws Exception {
@@ -50,9 +54,9 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		createTasks(project);
+		// createTasks(project);
 		createDefects(project);
-		createUserStories(project);
+		// createUserStories(project);
 
 	}
 
@@ -84,21 +88,21 @@ public class RallyToJira {
 		if (Utils.isEmpty(jiraIssue)) {
 
 			if (task.get("WorkProduct") == null || task.get("WorkProduct").isJsonNull()) {
-				jiraIssue = jira.createIssueInJira(project, jiraVersionId, task, RallyObject.TASK, "Task");
+				jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, task, RallyObject.TASK, "Task");
 			} else {
 				JsonObject rallyTaskWorkProduct = task.get("WorkProduct").getAsJsonObject();
 				String workProductType = rallyTaskWorkProduct.get("_type").getAsString();
 				if (workProductType.equalsIgnoreCase("hierarchicalrequirement")) {
 					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyTaskWorkProduct);
 					task.add("jira-parent-key", getParentKey(jiraParentIssue));
-					jiraIssue = jira.createIssueInJira(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
+					jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 				} else {
 					if (workProductType.equalsIgnoreCase("defect")) {
 						JsonObject jiraParentIssue = findOrCreateIssueInJiraForDefect(project, rallyTaskWorkProduct);
 						task.add("jira-parent-key", getParentKey(jiraParentIssue));
-						jiraIssue = jira.createIssueInJira(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
+						jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 					} else {
-						jiraIssue = jira.createIssueInJira(project, jiraVersionId, task, RallyObject.TASK, "Task");
+						jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, task, RallyObject.TASK, "Task");
 					}
 
 				}
@@ -128,19 +132,54 @@ public class RallyToJira {
 
 	private JsonObject findOrCreateIssueInJiraForDefect(JsonObject project, JsonObject defect) throws Exception {
 		String rallyFormattedId = defect.get("FormattedID").getAsString();
+		if (!rallyFormattedId.equals("DE4103"))
+			return null;
+
 		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(rallyFormattedId);
 		String jiraVersionId = getJiraVersionIdForRelease(defect);
 		if (Utils.isEmpty(jiraIssue)) {
 			if (defect.get("Requirement") == null || defect.get("Requirement").isJsonNull()) {
-				jiraIssue = jira.createIssueInJira(project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
+				jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
 			} else {
 				JsonObject rallyDefectUserStory = rally.findRallyObjectByFormatteID(project, defect.get("Requirement").getAsJsonObject().get("FormattedID").getAsString(), RallyObject.USER_STORY);
 				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyDefectUserStory);
 				defect.add("jira-parent-key", getParentKey(jiraParentIssue));
-				jiraIssue = jira.createIssueInJira(project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
+				jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
 			}
 		}
 		return jiraIssue;
+	}
+
+	private JsonObject createIssueInJiraAndProcessAttachments(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType)
+			throws Exception {
+		JsonObject jiraIssue = jira.createIssueInJira(project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
+		processAttachments(project, rallyWorkProduct, jiraIssue);
+		return jiraIssue;
+	}
+
+	private boolean processAttachments(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws IOException {
+		JsonElement jeAattachments = rallyWorkProduct.get("Attachments");
+		if (!Utils.isEmpty(jeAattachments)) {
+			JsonArray attachments = jeAattachments.getAsJsonArray();
+			for (JsonElement attachment : attachments) {
+				uploadAttachmentToJira(project, attachment.getAsJsonObject(), jiraIssue);
+			}
+		}
+
+		return false;
+	}
+
+	private void uploadAttachmentToJira(JsonObject project, JsonObject attachment, JsonObject jiraIssue) throws IOException {
+		attachment = rally.findRallyObjectByObjectID(project, RallyObject.ATTACHMENT, attachment.get("ObjectID").getAsString());
+		String fileName = attachment.get("Name").getAsString();
+		String description = attachment.get("Description").getAsString();
+		JsonObject attachmentContent = jira.getRallyAttachment(attachment.get("Content").getAsJsonObject().get("_ref").getAsString());
+		String base64Content = attachmentContent.get("AttachmentContent").getAsJsonObject().get("Content").getAsString();
+		byte[] decodedString = Base64.decodeBase64(base64Content);
+		FileOutputStream outFile = new FileOutputStream("c:/RallyAttachments/" + fileName);
+		outFile.write(decodedString);
+		outFile.close();
+		jira.attachFile(jiraIssue.get("key").getAsString(), new File("c:/RallyAttachments/" + fileName));
 	}
 
 	private void createUserStories(JsonObject project) throws Exception {
@@ -161,12 +200,12 @@ public class RallyToJira {
 		String jiraVersionId = getJiraVersionIdForRelease(userStory);
 		if (Utils.isEmpty(jiraIssue)) {
 			if (userStory.get("Parent") == null || userStory.get("Parent").isJsonNull()) {
-				jiraIssue = jira.createIssueInJira(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
+				jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
 			} else {
 				JsonObject rallyParentUserStory = rally.findRallyObjectByFormatteID(project, userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString(), RallyObject.USER_STORY);
-				JsonObject jiraParentIssue = jira.createIssueInJira(project, jiraVersionId, rallyParentUserStory, RallyObject.USER_STORY, "Story");
+				JsonObject jiraParentIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, rallyParentUserStory, RallyObject.USER_STORY, "Story");
 				userStory.add("jira-parent-key", getParentKey(jiraParentIssue));
-				jiraIssue = jira.createIssueInJira(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
+				jiraIssue = createIssueInJiraAndProcessAttachments(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
 			}
 		}
 		return jiraIssue;

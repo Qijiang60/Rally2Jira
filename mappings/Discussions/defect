@@ -4,6 +4,7 @@ summary,Name
 description,Description
 labels[],Tags._refObjectName
 assignee.name,Owner._refObjectName
+NULL,Attachments
 NULL,ObjectID
 NULL,Requirement
 NULL,Release

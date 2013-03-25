@@ -5,6 +5,7 @@ import java.net.URI;
 
 import javax.ws.rs.core.MediaType;
 
+import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -17,11 +18,13 @@ public class JiraRestApi {
 	protected URI server;
 	protected Client client;
 	protected String auth;
+	protected String authRally;
 
 	public JiraRestApi(URI server, String username, String password) {
 		this.server = server;
 
 		auth = new String(Base64.encode(username + ":" + password));
+		authRally = new String(Base64.encode("hagarwal@executiveboard.com:harshag12"));
 		client = Client.create();
 	}
 
@@ -47,11 +50,10 @@ public class JiraRestApi {
 
 	}
 
-	public ClientResponse doMultipartPost(String url, String fileName) {
+	public ClientResponse doMultipartPost(String url, File file) {
 		WebResource webResource = client.resource(server + url);
 		FormDataMultiPart form = new FormDataMultiPart();
-		FileDataBodyPart fdp = new FileDataBodyPart("file", new File(
-				"C:\\Users\\hagarwal\\Documents\\4797_001.pdf"),
+		FileDataBodyPart fdp = new FileDataBodyPart("file", file,
 				MediaType.APPLICATION_OCTET_STREAM_TYPE);
 		form.bodyPart(fdp);
 		ClientResponse response = webResource
@@ -74,5 +76,15 @@ public class JiraRestApi {
 				.delete(ClientResponse.class);
 		return response;
 
+	}
+
+	public ClientResponse doRallyGet(String url) {
+		System.out.println("doRallyGet: " + server + url);
+		WebResource webResource = client.resource(url);
+		ClientResponse response = webResource
+				.header("Authorization", "Basic " + authRally)
+				.type("application/json").accept("application/json")
+				.get(ClientResponse.class);
+		return response;
 	}
 }

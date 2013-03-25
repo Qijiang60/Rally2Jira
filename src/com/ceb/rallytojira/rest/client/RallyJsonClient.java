@@ -22,7 +22,7 @@ public class RallyJsonClient {
 	public RallyJsonClient() throws URISyntaxException {
 		api = new RallyRestApi(new URI("https://rally1.rallydev.com"),
 				"hagarwal@executiveboard.com", "harshag12");
-
+		api.setWsapiVersion("1.41");
 	}
 
 	public JsonArray searchObjects(RallyObject obj, Map<String, String> filter,
