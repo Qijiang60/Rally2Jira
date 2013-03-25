@@ -80,11 +80,14 @@ public class JiraOperations {
 
 	}
 
-	public JsonObject createIssueInJira(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType) throws IOException {
+	public JsonObject createIssueInJira(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType) throws Exception {
 		Map<String, Object> postData = getIssueCreateMap(project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
 		ClientResponse response = api.doPost("/rest/api/latest/issue", Utils.listToJsonString(postData));
 		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
 		System.out.println(jResponse);
+		if(jResponse.get("errorMessages") != null){
+			throw new Exception("error");
+		}
 		return jResponse;
 	}
 
@@ -135,7 +138,7 @@ public class JiraOperations {
 		return null;
 	}
 
-	public JsonObject createSubUserStory(JsonObject project, String versionId, JsonObject userStory, JsonObject jiraParentIssue) throws IOException {
+	public JsonObject createSubUserStory(JsonObject project, String versionId, JsonObject userStory, JsonObject jiraParentIssue) throws Exception {
 		userStory.add("jira-parent-key", jiraParentIssue.get("key"));
 		return createIssueInJira(project, versionId, userStory, RallyObject.USER_STORY, "Sub-story");
 
