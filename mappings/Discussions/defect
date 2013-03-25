@@ -5,7 +5,7 @@ description,Description
 labels[],Tags._refObjectName
 assignee.name,Owner._refObjectName
 NULL,ObjectID
-NULL,Parent
+NULL,Requirement
 NULL,Release
 NULL,Project
 
