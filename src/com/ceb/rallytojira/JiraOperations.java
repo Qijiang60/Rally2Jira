@@ -85,7 +85,7 @@ public class JiraOperations {
 		ClientResponse response = api.doPost("/rest/api/latest/issue", Utils.listToJsonString(postData));
 		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
 		System.out.println(jResponse);
-		if(jResponse.get("errorMessages") != null){
+		if (jResponse.get("errorMessages") != null) {
 			throw new Exception("error");
 		}
 		return jResponse;
@@ -106,15 +106,18 @@ public class JiraOperations {
 		issuetype.put("name", jiraIssueType);
 		issueData.put("issuetype", issuetype);
 
-		Map version = new HashMap();
-		version.put("id", versionId);
-		List versions = new ArrayList();
-		versions.add(version);
-		issueData.put("fixVersions", versions);
-
+		if (!Utils.isEmpty(versionId)) {
+			Map version = new HashMap();
+			version.put("id", versionId);
+			List versions = new ArrayList();
+			versions.add(version);
+			issueData.put("fixVersions", versions);
+		}
 		for (String key : mapping.keySet()) {
 			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue);
-			issueData.putAll(jiraMap);
+			if (jiraMap != null) {
+				issueData.putAll(jiraMap);
+			}
 
 		}
 		if (rallyIssue.get("jira-parent-key") != null && !rallyIssue.get("jira-parent-key").isJsonNull()) {
@@ -141,6 +144,16 @@ public class JiraOperations {
 	public JsonObject createSubUserStory(JsonObject project, String versionId, JsonObject userStory, JsonObject jiraParentIssue) throws Exception {
 		userStory.add("jira-parent-key", jiraParentIssue.get("key"));
 		return createIssueInJira(project, versionId, userStory, RallyObject.USER_STORY, "Sub-story");
+
+	}
+
+	public void deleteAllIssues(JsonObject project) throws IOException {
+		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectNameForRallyProject(project) + "&maxResults=100";
+		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
+		for (JsonElement issue : issues) {
+			String issueKey = issue.getAsJsonObject().get("key").getAsString();
+			api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
+		}
 
 	}
 

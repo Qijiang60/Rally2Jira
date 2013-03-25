@@ -135,6 +135,7 @@ public class Utils {
 		r.setMaxLineLength(5000);
 		s = r.toString();
 		s = s.replace("\r\n", "\\n");
+		s = s.replace("\t", "\\t");
 		return s;
 	}
 
@@ -167,7 +168,7 @@ public class Utils {
 		}
 		if (jiraKey.equals("labels[]")) {
 			List<String> labelsWithoutSpaces = new ArrayList<String>();
-			for(String s : values){
+			for (String s : values) {
 				labelsWithoutSpaces.add(s.replace(" ", ""));
 			}
 			values = labelsWithoutSpaces;
@@ -213,6 +214,9 @@ public class Utils {
 			String parentKey = key.substring(0, key.lastIndexOf("."));
 			String childKey = key.substring(key.lastIndexOf(".") + 1);
 			Map m = createJiraMap(childKey, value);
+			if (m == null) {
+				return null;
+			}
 			return createJiraMap(parentKey, m);
 		}
 		Map m = new HashMap();
@@ -228,6 +232,8 @@ public class Utils {
 			} else {
 				if (l.size() > 0) {
 					m.put(key, l.get(0));
+				} else {
+					m = null;
 				}
 			}
 		} else {

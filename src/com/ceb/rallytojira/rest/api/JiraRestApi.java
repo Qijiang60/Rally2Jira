@@ -64,4 +64,15 @@ public class JiraRestApi {
 		return response;
 
 	}
+
+	public ClientResponse doDelete(String url) {
+		System.out.println("doDelete: " + server + url);
+		WebResource webResource = client.resource(server + url);
+		ClientResponse response = webResource
+				.header("Authorization", "Basic " + auth)
+				.type("application/json").accept("application/json")
+				.delete(ClientResponse.class);
+		return response;
+
+	}
 }

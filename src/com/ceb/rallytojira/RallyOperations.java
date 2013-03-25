@@ -55,11 +55,10 @@ public class RallyOperations {
 		return client.searchObjects(workProductType, filter, dataElements).get(0).getAsJsonObject();
 	}
 
-	public JsonArray getRallyObjectsForProjectAndRelease(JsonObject project, String releaseObjectID, RallyObject objectType) throws IOException {
+	public JsonArray getRallyObjectsForProject(JsonObject project, RallyObject objectType) throws IOException {
 		List<String> dataElements = Utils.elementsTobeFetched(Utils.getJsonObjectName(project), objectType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("Project.ObjectID", project.get("ObjectID").getAsString());
-		filter.put("Release.ObjectID", releaseObjectID);
 		return client.searchObjects(objectType, filter, dataElements);
 	}
 
