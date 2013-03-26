@@ -42,7 +42,7 @@ public class JiraOperations {
 			data.put("project", Utils.getJiraProjectNameForRallyProject(project));
 
 			for (String key : mapping.keySet()) {
-				data.putAll(Utils.getJiraValue(key, mapping.get(key), release));
+				data.putAll(Utils.getJiraValue(key, mapping.get(key), release, project));
 			}
 			Utils.printJson(data);
 			ClientResponse response = api.doPost("/rest/api/latest/version", Utils.mapToJsonString(data));
@@ -119,7 +119,7 @@ public class JiraOperations {
 			issueData.put("fixVersions", versions);
 		}
 		for (String key : mapping.keySet()) {
-			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue);
+			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue,project);
 			if (jiraMap != null) {
 				String topKey = (String) jiraMap.keySet().toArray()[0];
 				if (issueData.containsKey(topKey)) {

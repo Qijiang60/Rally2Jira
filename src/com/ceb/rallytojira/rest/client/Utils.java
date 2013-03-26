@@ -31,6 +31,7 @@ public class Utils {
 	private static Map<String, String> jiraRallyUserMap;
 	private static Map<String, Map<String, String>> elementMapping = new HashMap<String, Map<String, String>>();
 	private static Map<String, String> workflowStatusMapping;
+	private static Map<String, String> priorityMapping;
 
 	public static boolean isEmpty(String s) {
 		return s == null || s.length() == 0 || s.equalsIgnoreCase("null") || s.replace(" ", "").length() == 0;
@@ -150,6 +151,30 @@ public class Utils {
 		return workflowStatusMapping;
 	}
 
+	public static Map<String, String> getPriorityMapping(String project) throws IOException {
+		if (priorityMapping == null) {
+			priorityMapping = new HashMap<String, String>();
+			FileReader fr = new FileReader("mappings/" + project + "/priorities_mapping");
+			BufferedReader br = new BufferedReader(fr);
+			String stringRead = br.readLine();
+			int i = 0;
+			while (stringRead != null) {
+				if (i > 0 && Utils.isNotEmpty(stringRead)) {
+					StringTokenizer st = new StringTokenizer(stringRead, ",");
+					String jiraField = st.nextToken();
+					if (!"NULL".equals(jiraField)) {
+						String rallyField = st.nextToken();
+						priorityMapping.put(jiraField, rallyField);
+					}
+				}
+				i++;
+				stringRead = br.readLine();
+			}
+			br.close();
+		}
+		return priorityMapping;
+	}
+
 	public static void printJson(Map<String, Object> data) {
 
 		System.out.println(mapToJsonString(data));
@@ -175,7 +200,7 @@ public class Utils {
 	}
 
 	public static JsonObject jerseyRepsonseToJsonObject(ClientResponse response) {
-		if(response.getStatus()==204){
+		if (response.getStatus() == 204) {
 			return new JsonObject();
 		}
 		return (JsonObject) (new JsonParser()).parse(response.getEntity(String.class));
@@ -196,7 +221,7 @@ public class Utils {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	public static Map getJiraValue(String jiraKey, String rallyKey, JsonObject userStory) throws IOException {
+	public static Map getJiraValue(String jiraKey, String rallyKey, JsonObject userStory, JsonObject project) throws IOException {
 		List<String> values = getValueFromTree(rallyKey, userStory);
 		if (jiraKey.equals("labels[]")) {
 			List<String> labelsWithoutSpaces = new ArrayList<String>();
@@ -204,6 +229,20 @@ public class Utils {
 				labelsWithoutSpaces.add(s.replace(" ", ""));
 			}
 			values = labelsWithoutSpaces;
+		}
+		if (jiraKey.equals("reporter.name")) {
+			List<String> jiraUser = new ArrayList<String>();
+			for (String s : values) {
+				jiraUser.add(lookupJiraUsername(s));
+			}
+			values = jiraUser;
+		}
+		if (jiraKey.equals("priority.name")) {
+			List<String> translatedPriority = new ArrayList<String>();
+			for (String s : values) {
+				translatedPriority.add(getJiraPriority(getJsonObjectName(project), s));
+			}
+			values = translatedPriority;
 		}
 		if (jiraKey.startsWith("timetracking")) {
 			List<String> timeInHours = new ArrayList<String>();
@@ -214,6 +253,16 @@ public class Utils {
 		}
 		Map jiraMap = createJiraMap(jiraKey, values);
 		return jiraMap;
+	}
+
+	private static String getJiraPriority(String project, String rallyPriority) throws IOException {
+		Map<String, String> pMap = getPriorityMapping(project);
+		for (String jiraPriority : pMap.keySet()) {
+			if (pMap.get(jiraPriority).equalsIgnoreCase(rallyPriority)) {
+				return jiraPriority;
+			}
+		}
+		return null;
 	}
 
 	public static String lookupJiraUsername(String rallyUsername) throws IOException {
