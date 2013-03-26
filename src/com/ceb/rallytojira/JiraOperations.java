@@ -222,4 +222,14 @@ public class JiraOperations {
 
 	}
 
+	public JsonObject updateIssueAssignee(String projectName, String issueKey, String rallyOwnerName) throws Exception {
+		String jiraUsername = Utils.lookupJiraUsername(rallyOwnerName);
+
+		Map<String, Object> m = new HashMap<String, Object>();
+		m.put("name", jiraUsername);
+		Utils.printJson(m);
+		ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
+		return processJiraResponse(response);
+	}
+
 }

@@ -198,12 +198,6 @@ public class Utils {
 	@SuppressWarnings({ "rawtypes" })
 	public static Map getJiraValue(String jiraKey, String rallyKey, JsonObject userStory) throws IOException {
 		List<String> values = getValueFromTree(rallyKey, userStory);
-		if (jiraKey.equals("assignee.name")) {
-			if (values.size() > 0) {
-				String jiraUsername = lookupJiraUsername(values.get(0));
-				values.set(0, jiraUsername);
-			}
-		}
 		if (jiraKey.equals("labels[]")) {
 			List<String> labelsWithoutSpaces = new ArrayList<String>();
 			for (String s : values) {
@@ -222,7 +216,7 @@ public class Utils {
 		return jiraMap;
 	}
 
-	private static String lookupJiraUsername(String rallyUsername) throws IOException {
+	public static String lookupJiraUsername(String rallyUsername) throws IOException {
 		if (jiraRallyUserMap == null) {
 			jiraRallyUserMap = new TreeMap<String, String>();
 			FileReader fr = new FileReader("mappings/usernames");

@@ -157,25 +157,49 @@ public class RallyToJira {
 		processNotes(project, rallyWorkProduct, jiraIssue);
 		processWorkLog(project, rallyWorkProduct, jiraIssue);
 		processStatus(project, rallyWorkProduct, jiraIssue);
+		updateAssignee(project, rallyWorkProduct, jiraIssue);
 		return jiraIssue;
 	}
 
-	private void processStatus(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
-		if (Utils.isNotEmpty(rallyWorkProduct.get("State")) && !rallyWorkProduct.get("State").isJsonNull() && Utils.isNotEmpty(rallyWorkProduct.get("State").getAsString())) {
-			jira.updateWorkflowStatus(Utils.getJsonObjectName(project),jiraIssue.get("key").getAsString(), rallyWorkProduct.get("State").getAsString());
+	private void updateAssignee(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
+		if (isNotJsonNull(rallyWorkProduct, "Owner") && isNotJsonNull(rallyWorkProduct.get("Owner").getAsJsonObject(), "_refObjectName")) {
+			jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Owner").getAsJsonObject().get("_refObjectName").getAsString());
 		}
-		
+	}
+
+	private void processStatus(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
+		if (isNotJsonNull(rallyWorkProduct, "State")) {
+			jira.updateWorkflowStatus(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("State").getAsString());
+		}
+		if (isNotJsonNull(rallyWorkProduct, "ScheduleState")) {
+			jira.updateWorkflowStatus(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("ScheduleState").getAsString());
+		}
+
+	}
+
+	private boolean isNotJsonNull(JsonObject rallyWorkProduct, String field) {
+		return !isJsonNull(rallyWorkProduct, field);
+	}
+
+	private boolean isJsonNull(JsonObject rallyWorkProduct, String field) {
+		if (Utils.isEmpty(rallyWorkProduct.get(field)) || rallyWorkProduct.get(field).isJsonNull()) {
+			return true;
+		}
+		if (rallyWorkProduct.get(field).isJsonPrimitive()) {
+			return Utils.isEmpty(rallyWorkProduct.get(field).getAsString());
+		}
+		return false;
 	}
 
 	private void processWorkLog(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
-		if (Utils.isNotEmpty(rallyWorkProduct.get("Actuals")) && !rallyWorkProduct.get("Actuals").isJsonNull() && Utils.isNotEmpty(rallyWorkProduct.get("Actuals").getAsString())) {
+		if (isNotJsonNull(rallyWorkProduct, "Actuals")) {
 			jira.logWork(jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Actuals").getAsString());
 		}
-		
+
 	}
 
 	private void processNotes(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
-		if (Utils.isNotEmpty(rallyWorkProduct.get("Notes")) && !rallyWorkProduct.get("Notes").isJsonNull() && Utils.isNotEmpty(rallyWorkProduct.get("Notes").getAsString())) {
+		if (isNotJsonNull(rallyWorkProduct, "Notes")) {
 			jira.addComment(jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Notes").getAsString());
 		}
 

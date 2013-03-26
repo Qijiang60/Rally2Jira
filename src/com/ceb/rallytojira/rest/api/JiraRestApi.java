@@ -5,7 +5,6 @@ import java.net.URI;
 
 import javax.ws.rs.core.MediaType;
 
-import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -40,7 +39,7 @@ public class JiraRestApi {
 	}
 
 	public ClientResponse doPost(String url, String data) {
-		System.out.println("doGet: " + server + url);
+		System.out.println("doPost: " + server + url);
 		WebResource webResource = client.resource(server + url);
 		ClientResponse response = webResource
 				.header("Authorization", "Basic " + auth)
@@ -86,6 +85,17 @@ public class JiraRestApi {
 				.header("Authorization", "Basic " + authRally)
 				.type("application/json").accept("application/json")
 				.get(ClientResponse.class);
+		return response;
+	}
+
+	public ClientResponse doPut(String url, String data) {
+		System.out.println("doPut: " + server + url);
+		WebResource webResource = client.resource(server + url);
+		ClientResponse response = webResource
+				.header("Authorization", "Basic " + auth)
+				.type("application/json").accept("application/json")
+				.put(ClientResponse.class, data);
+
 		return response;
 	}
 }

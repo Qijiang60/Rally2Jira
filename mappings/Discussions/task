@@ -3,9 +3,9 @@ customfield_10200,FormattedID
 summary,Name
 description,Description
 labels[],Tags._refObjectName
-assignee.name,Owner._refObjectName
 timetracking.originalEstimate,Estimate
 timetracking.remainingEstimate,ToDo
+NULL,Owner._refObjectName
 NULL,Actuals
 NULL,Notes
 NULL,ObjectID
