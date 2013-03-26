@@ -172,14 +172,16 @@ public class RallyToJira {
 	private void uploadAttachmentToJira(JsonObject project, JsonObject attachment, JsonObject jiraIssue) throws IOException {
 		attachment = rally.findRallyObjectByObjectID(project, RallyObject.ATTACHMENT, attachment.get("ObjectID").getAsString());
 		String fileName = attachment.get("Name").getAsString();
-		String description = attachment.get("Description").getAsString();
+		// String description = attachment.get("Description").getAsString();
 		JsonObject attachmentContent = jira.getRallyAttachment(attachment.get("Content").getAsJsonObject().get("_ref").getAsString());
 		String base64Content = attachmentContent.get("AttachmentContent").getAsJsonObject().get("Content").getAsString();
 		byte[] decodedString = Base64.decodeBase64(base64Content);
-		FileOutputStream outFile = new FileOutputStream("c:/RallyAttachments/" + fileName);
+		File f = new File("/RallyAttachments/" + fileName);
+		FileOutputStream outFile = new FileOutputStream(f);
 		outFile.write(decodedString);
 		outFile.close();
-		jira.attachFile(jiraIssue.get("key").getAsString(), new File("c:/RallyAttachments/" + fileName));
+		jira.attachFile(jiraIssue.get("key").getAsString(), f);
+		f.delete();
 	}
 
 	private void createUserStories(JsonObject project) throws Exception {

@@ -130,6 +130,7 @@ public class Utils {
 	public static String listToJsonString(Map<String, Object> data) {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 		String s = gson.toJson(data);
+		s =removeStyleTags(s);
 		Source htmlSource = new Source(s);
 		Renderer r = htmlSource.getRenderer();
 		r.setMaxLineLength(5000);
@@ -137,6 +138,11 @@ public class Utils {
 		s = s.replace("\r\n", "\\n");
 		s = s.replace("\t", "\\t");
 		return s;
+	}
+
+	private static String removeStyleTags(String s) {
+		return s.replaceAll("( style=\\\\\\\"[^\\\"]*\\\\\\\")", "");
+		
 	}
 
 	public static JsonObject jerseyRepsonseToJsonObject(ClientResponse response) {
