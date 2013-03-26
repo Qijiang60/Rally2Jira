@@ -4,6 +4,8 @@ summary,Name
 description,Description
 labels[],Tags._refObjectName
 reporter.name,SubmittedBy._refObjectName
+priority.name,Priority
+environment,Environment
 NULL,Owner._refObjectName
 NULL,Attachments
 NULL,ObjectID
@@ -11,5 +13,3 @@ NULL,Requirement
 NULL,Release
 NULL,Project
 NULL,State
-priority.name,Priority
-environment,Environment

@@ -213,6 +213,9 @@ public class JiraOperations {
 	public JsonObject updateWorkflowStatus(String project, String issueKey, String rallyStatus) throws Exception {
 		Map transitionMap = new HashMap();
 		String jiraTransitionId = Utils.getJiraTransitionId(project, rallyStatus);
+		if(jiraTransitionId.equals("1")){
+			return null;
+		}
 		Map transitionIdMap = new HashMap();
 		transitionIdMap.put("id", jiraTransitionId);
 		transitionMap.put("transition", transitionIdMap);

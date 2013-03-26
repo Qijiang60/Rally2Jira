@@ -21,7 +21,7 @@ public class RallyToJira {
 	JiraOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
-	int limit = 1;
+	int limit = 100000;
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -92,14 +92,17 @@ public class RallyToJira {
 			} else {
 				JsonObject rallyTaskWorkProduct = task.get("WorkProduct").getAsJsonObject();
 				String workProductType = rallyTaskWorkProduct.get("_type").getAsString();
+				String workProductFormattedID = rallyTaskWorkProduct.get("FormattedID").getAsString();
 				if (workProductType.equalsIgnoreCase("hierarchicalrequirement")) {
+					rallyTaskWorkProduct = rally.findRallyObjectByFormatteID(project, workProductFormattedID, RallyObject.USER_STORY);
 					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyTaskWorkProduct);
-					task.add("jira-parent-key", getParentKey(jiraParentIssue));
+					addParentFields(task, jiraParentIssue, rallyTaskWorkProduct);
 					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 				} else {
 					if (workProductType.equalsIgnoreCase("defect")) {
+						rallyTaskWorkProduct = rally.findRallyObjectByFormatteID(project, workProductFormattedID, RallyObject.DEFECT);
 						JsonObject jiraParentIssue = findOrCreateIssueInJiraForDefect(project, rallyTaskWorkProduct);
-						task.add("jira-parent-key", getParentKey(jiraParentIssue));
+						addParentFields(task, jiraParentIssue, rallyTaskWorkProduct);
 						jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 					} else {
 						jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Task");
@@ -132,9 +135,6 @@ public class RallyToJira {
 
 	private JsonObject findOrCreateIssueInJiraForDefect(JsonObject project, JsonObject defect) throws Exception {
 		String rallyFormattedId = defect.get("FormattedID").getAsString();
-		if (!rallyFormattedId.equals("DE4103"))
-			return null;
-
 		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(rallyFormattedId);
 		String jiraVersionId = getJiraVersionIdForRelease(defect);
 		if (Utils.isEmpty(jiraIssue)) {
@@ -143,7 +143,7 @@ public class RallyToJira {
 			} else {
 				JsonObject rallyDefectUserStory = rally.findRallyObjectByFormatteID(project, defect.get("Requirement").getAsJsonObject().get("FormattedID").getAsString(), RallyObject.USER_STORY);
 				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyDefectUserStory);
-				defect.add("jira-parent-key", getParentKey(jiraParentIssue));
+				addParentFields(defect, jiraParentIssue, rallyDefectUserStory);
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
 			}
 		}
@@ -164,6 +164,16 @@ public class RallyToJira {
 	private void updateAssignee(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		if (isNotJsonNull(rallyWorkProduct, "Owner") && isNotJsonNull(rallyWorkProduct.get("Owner").getAsJsonObject(), "_refObjectName")) {
 			jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Owner").getAsJsonObject().get("_refObjectName").getAsString());
+		} else {
+			if (isNotJsonNull(rallyWorkProduct, "rally-parent-owner")) {
+				JsonElement jeRallyOwner = rallyWorkProduct.get("rally-parent-owner");
+				if (jeRallyOwner != null && jeRallyOwner.isJsonObject()) {
+					JsonObject rallyOwner = jeRallyOwner.getAsJsonObject();
+					if (isNotJsonNull(rallyOwner.getAsJsonObject(), "_refObjectName")) {
+						jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyOwner.get("_refObjectName").getAsString());
+					}
+				}
+			}
 		}
 	}
 
@@ -182,7 +192,7 @@ public class RallyToJira {
 	}
 
 	private boolean isJsonNull(JsonObject rallyWorkProduct, String field) {
-		if (Utils.isEmpty(rallyWorkProduct.get(field)) || rallyWorkProduct.get(field).isJsonNull()) {
+		if (Utils.isEmpty(rallyWorkProduct) || Utils.isEmpty(rallyWorkProduct.get(field)) || rallyWorkProduct.get(field).isJsonNull()) {
 			return true;
 		}
 		if (rallyWorkProduct.get(field).isJsonPrimitive()) {
@@ -257,11 +267,16 @@ public class RallyToJira {
 			} else {
 				JsonObject rallyParentUserStory = rally.findRallyObjectByFormatteID(project, userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString(), RallyObject.USER_STORY);
 				JsonObject jiraParentIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, rallyParentUserStory, RallyObject.USER_STORY, "Story");
-				userStory.add("jira-parent-key", getParentKey(jiraParentIssue));
+				addParentFields(userStory, jiraParentIssue, rallyParentUserStory);
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
 			}
 		}
 		return jiraIssue;
+	}
+
+	private void addParentFields(JsonObject rallyWorkProduct, JsonObject jiraParentIssue, JsonObject rallyParentWorkProduct) {
+		rallyWorkProduct.add("jira-parent-key", getParentKey(jiraParentIssue));
+		rallyWorkProduct.add("rally-parent-owner", rallyParentWorkProduct.get("Owner"));
 	}
 
 	private String getJiraVersionIdForRelease(JsonObject rallyObject) {

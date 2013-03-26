@@ -32,6 +32,7 @@ public class Utils {
 	private static Map<String, Map<String, String>> elementMapping = new HashMap<String, Map<String, String>>();
 	private static Map<String, String> workflowStatusMapping;
 	private static Map<String, String> priorityMapping;
+	private static Map<String, List<String>> elementMap = new HashMap<String, List<String>>();
 
 	public static boolean isEmpty(String s) {
 		return s == null || s.length() == 0 || s.equalsIgnoreCase("null") || s.replace(" ", "").length() == 0;
@@ -79,24 +80,28 @@ public class Utils {
 	}
 
 	public static List<String> elementsTobeFetched(String project, RallyObject artifactType) throws IOException {
-		List<String> elements = new ArrayList<String>();
-		FileReader fr = new FileReader("mappings/" + project + "/" + artifactType.getCode());
-		BufferedReader br = new BufferedReader(fr);
-		String stringRead = br.readLine();
+		List<String> elements = elementMap.get(artifactType.getCode());
+		if (elements == null) {
+			elements = new ArrayList<String>();
+			elementMap.put(artifactType.getCode(), elements);
+			FileReader fr = new FileReader("mappings/" + project + "/" + artifactType.getCode());
+			BufferedReader br = new BufferedReader(fr);
+			String stringRead = br.readLine();
 
-		while (stringRead != null) {
-			if (Utils.isNotEmpty(stringRead)) {
-				StringTokenizer st = new StringTokenizer(stringRead, ",");
-				String jiraField = st.nextToken();
-				String rallyField = st.nextToken();
-				if (rallyField.indexOf(".") > 1) {
-					rallyField = rallyField.substring(0, rallyField.indexOf("."));
+			while (stringRead != null) {
+				if (Utils.isNotEmpty(stringRead)) {
+					StringTokenizer st = new StringTokenizer(stringRead, ",");
+					String jiraField = st.nextToken();
+					String rallyField = st.nextToken();
+					if (rallyField.indexOf(".") > 1) {
+						rallyField = rallyField.substring(0, rallyField.indexOf("."));
+					}
+					elements.add(rallyField);
 				}
-				elements.add(rallyField);
+				stringRead = br.readLine();
 			}
-			stringRead = br.readLine();
+			br.close();
 		}
-		br.close();
 		return elements;
 
 	}
@@ -345,7 +350,9 @@ public class Utils {
 						lValues.add(jel.getAsJsonObject().get(key).getAsString());
 					}
 				} else {
-					lValues.add(je.getAsJsonObject().get(key).getAsString());
+					if (!je.getAsJsonObject().get(key).isJsonNull()) {
+						lValues.add(je.getAsJsonObject().get(key).getAsString());
+					}
 				}
 			}
 		}
