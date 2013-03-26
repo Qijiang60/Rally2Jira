@@ -146,7 +146,7 @@ public class JiraOperations {
 			issueData.putAll(parentStory);
 		}
 		postData.put("fields", issueData);
-		Utils.printJson(postData);
+//		Utils.printJson(postData);
 		return postData;
 	}
 

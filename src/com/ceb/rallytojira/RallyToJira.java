@@ -203,7 +203,14 @@ public class RallyToJira {
 
 	private void processWorkLog(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		if (isNotJsonNull(rallyWorkProduct, "Actuals")) {
-			jira.logWork(jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Actuals").getAsString());
+			String actualtime = rallyWorkProduct.get("Actuals").getAsString();
+			try {
+				int at = Integer.parseInt(actualtime);
+				if (at > 0) {
+					jira.logWork(jiraIssue.get("key").getAsString(), actualtime);
+				}
+			} catch (NumberFormatException ex) {
+			}
 		}
 
 	}
@@ -266,7 +273,7 @@ public class RallyToJira {
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
 			} else {
 				JsonObject rallyParentUserStory = rally.findRallyObjectByFormatteID(project, userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString(), RallyObject.USER_STORY);
-				JsonObject jiraParentIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, rallyParentUserStory, RallyObject.USER_STORY, "Story");
+				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyParentUserStory);
 				addParentFields(userStory, jiraParentIssue, rallyParentUserStory);
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
 			}
