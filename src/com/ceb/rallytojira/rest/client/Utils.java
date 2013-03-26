@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -30,6 +29,8 @@ import com.sun.jersey.api.client.ClientResponse;
 
 public class Utils {
 	private static Map<String, String> jiraRallyUserMap;
+	private static Map<String, Map<String, String>> elementMapping = new HashMap<String, Map<String, String>>();
+	private static Map<String, String> workflowStatusMapping;
 
 	public static boolean isEmpty(String s) {
 		return s == null || s.length() == 0 || s.equalsIgnoreCase("null") || s.replace(" ", "").length() == 0;
@@ -100,25 +101,53 @@ public class Utils {
 	}
 
 	public static Map<String, String> getElementMapping(RallyObject artifactType, String project) throws IOException {
-		Map<String, String> elementMapping = new LinkedHashMap<String, String>();
-		FileReader fr = new FileReader("mappings/" + project + "/" + artifactType.getCode());
-		BufferedReader br = new BufferedReader(fr);
-		String stringRead = br.readLine();
-		int i = 0;
-		while (stringRead != null) {
-			if (i > 0 && Utils.isNotEmpty(stringRead)) {
-				StringTokenizer st = new StringTokenizer(stringRead, ",");
-				String jiraField = st.nextToken();
-				if (!"NULL".equals(jiraField)) {
-					String rallyField = st.nextToken();
-					elementMapping.put(jiraField, rallyField);
+		Map<String, String> artifactMap = elementMapping.get(artifactType.getCode());
+		if (artifactMap == null) {
+			artifactMap = new HashMap<String, String>();
+			elementMapping.put(artifactType.getCode(), artifactMap);
+			FileReader fr = new FileReader("mappings/" + project + "/" + artifactType.getCode());
+			BufferedReader br = new BufferedReader(fr);
+			String stringRead = br.readLine();
+			int i = 0;
+			while (stringRead != null) {
+				if (i > 0 && Utils.isNotEmpty(stringRead)) {
+					StringTokenizer st = new StringTokenizer(stringRead, ",");
+					String jiraField = st.nextToken();
+					if (!"NULL".equals(jiraField)) {
+						String rallyField = st.nextToken();
+						artifactMap.put(jiraField, rallyField);
+					}
 				}
+				i++;
+				stringRead = br.readLine();
 			}
-			i++;
-			stringRead = br.readLine();
+			br.close();
 		}
-		br.close();
-		return elementMapping;
+		return artifactMap;
+	}
+
+	public static Map<String, String> getWorkflowStatusMapping(String project) throws IOException {
+		if (workflowStatusMapping == null) {
+			workflowStatusMapping = new HashMap<String, String>();
+			FileReader fr = new FileReader("mappings/" + project + "/workflow_status_mapping");
+			BufferedReader br = new BufferedReader(fr);
+			String stringRead = br.readLine();
+			int i = 0;
+			while (stringRead != null) {
+				if (i > 0 && Utils.isNotEmpty(stringRead)) {
+					StringTokenizer st = new StringTokenizer(stringRead, ",");
+					String jiraField = st.nextToken();
+					if (!"NULL".equals(jiraField)) {
+						String rallyField = st.nextToken();
+						workflowStatusMapping.put(jiraField, rallyField);
+					}
+				}
+				i++;
+				stringRead = br.readLine();
+			}
+			br.close();
+		}
+		return workflowStatusMapping;
 	}
 
 	public static void printJson(Map<String, Object> data) {
@@ -130,7 +159,7 @@ public class Utils {
 	public static String mapToJsonString(Map<String, Object> data) {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 		String s = gson.toJson(data);
-		s =removeStyleTags(s);
+		s = removeStyleTags(s);
 		Source htmlSource = new Source(s);
 		Renderer r = htmlSource.getRenderer();
 		r.setMaxLineLength(5000);
@@ -142,10 +171,13 @@ public class Utils {
 
 	private static String removeStyleTags(String s) {
 		return s.replaceAll("( style=\\\\\\\"[^\\\"]*\\\\\\\")", "");
-		
+
 	}
 
 	public static JsonObject jerseyRepsonseToJsonObject(ClientResponse response) {
+		if(response.getStatus()==204){
+			return new JsonObject();
+		}
 		return (JsonObject) (new JsonParser()).parse(response.getEntity(String.class));
 
 	}
@@ -178,6 +210,13 @@ public class Utils {
 				labelsWithoutSpaces.add(s.replace(" ", ""));
 			}
 			values = labelsWithoutSpaces;
+		}
+		if (jiraKey.startsWith("timetracking")) {
+			List<String> timeInHours = new ArrayList<String>();
+			for (String s : values) {
+				timeInHours.add(s + "h");
+			}
+			values = timeInHours;
 		}
 		Map jiraMap = createJiraMap(jiraKey, values);
 		return jiraMap;
@@ -268,5 +307,20 @@ public class Utils {
 			}
 		}
 		return lValues;
+	}
+
+	public static String getJiraTransitionId(String project, String rallyStatus) throws IOException {
+		Map<String, String> statusMap = getWorkflowStatusMapping(project);
+		for (String jiraStatus : statusMap.keySet()) {
+			String rallyStatusInMap = statusMap.get(jiraStatus);
+			if (rallyStatusInMap.indexOf(";") > 0) {
+				rallyStatusInMap = rallyStatusInMap.substring(0, rallyStatusInMap.indexOf(";"));
+			}
+			if (rallyStatus.equalsIgnoreCase(rallyStatusInMap)) {
+				String jiraTransitionId = jiraStatus.substring(jiraStatus.indexOf(";") + 1);
+				return jiraTransitionId;
+			}
+		}
+		return null;
 	}
 }

@@ -84,9 +84,13 @@ public class JiraOperations {
 	public JsonObject createIssueInJira(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType) throws Exception {
 		Map<String, Object> postData = getIssueCreateMap(project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
 		ClientResponse response = api.doPost("/rest/api/latest/issue", Utils.mapToJsonString(postData));
+		return processJiraResponse(response);
+	}
+
+	private JsonObject processJiraResponse(ClientResponse response) throws Exception {
 		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
-		System.out.println(jResponse);
 		if (jResponse.get("errorMessages") != null) {
+			System.out.println(jResponse);
 			throw new Exception("error");
 		}
 		return jResponse;
@@ -117,7 +121,20 @@ public class JiraOperations {
 		for (String key : mapping.keySet()) {
 			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue);
 			if (jiraMap != null) {
-				issueData.putAll(jiraMap);
+				String topKey = (String) jiraMap.keySet().toArray()[0];
+				if (issueData.containsKey(topKey)) {
+					Object val = issueData.get(topKey);
+					if (val instanceof Map) {
+						((Map) val).putAll((Map) jiraMap.get(topKey));
+					} else {
+						Map m = new HashMap();
+						m.putAll((Map) issueData.get(topKey));
+						m.putAll((Map) jiraMap.get(topKey));
+						issueData.put(topKey, m);
+					}
+				} else {
+					issueData.putAll(jiraMap);
+				}
 			}
 
 		}
@@ -152,18 +169,56 @@ public class JiraOperations {
 
 	}
 
-	public JsonObject getRallyAttachment(String URL) {
-		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(api.doRallyGet(URL));
-		return jResponse;
+	public JsonObject getRallyAttachment(String URL) throws Exception {
+		ClientResponse response = api.doRallyGet(URL);
+		return processJiraResponse(response);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void addComment(String issueKey, String comment) {
+	public JsonObject addComment(String issueKey, String comment) throws Exception {
 		Map commentMap = new HashMap();
 		commentMap.put("body", comment);
-		ClientResponse response = api.doPost("/rest/api/latest/issue/"+issueKey+"/comment", Utils.mapToJsonString(commentMap));
-		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
-		System.out.println(jResponse);
+		ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/comment", Utils.mapToJsonString(commentMap));
+		return processJiraResponse(response);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public JsonObject logWork(String issueKey, String loggedHours) throws Exception {
+		Map workLogMap = new HashMap();
+		workLogMap.put("timeSpent", loggedHours + "h");
+		// JsonObject jiraIssue = findIssueByIssueKey(issueKey);
+		// JsonElement assignee =
+		// jiraIssue.get("fields").getAsJsonObject().get("assignee");
+		// JsonElement assigneeName = assignee.getAsJsonObject().get("name");
+		// if (assigneeName != null && !assigneeName.isJsonNull()) {
+		// Map author = new HashMap();
+		// author.put("name", assigneeName.getAsString());
+		// workLogMap.put("author", author);
+		// Map updateAuthor = new HashMap();
+		// updateAuthor.put("name", assigneeName.getAsString());
+		// workLogMap.put("updateAuthor", updateAuthor);
+		// }
+		workLogMap.put("timeSpent", loggedHours + "h");
+		Utils.printJson(workLogMap);
+		ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/worklog", Utils.mapToJsonString(workLogMap));
+		return processJiraResponse(response);
+	}
+
+	public JsonObject findIssueByIssueKey(String issueKey) throws Exception {
+		ClientResponse response = api.doGet("/rest/api/2/issue/" + issueKey);
+		return processJiraResponse(response);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public JsonObject updateWorkflowStatus(String project, String issueKey, String rallyStatus) throws Exception {
+		Map transitionMap = new HashMap();
+		String jiraTransitionId = Utils.getJiraTransitionId(project, rallyStatus);
+		Map transitionIdMap = new HashMap();
+		transitionIdMap.put("id", jiraTransitionId);
+		transitionMap.put("transition", transitionIdMap);
+		Utils.printJson(transitionMap);
+		ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/transitions", Utils.mapToJsonString(transitionMap));
+		return processJiraResponse(response);
 
 	}
 
