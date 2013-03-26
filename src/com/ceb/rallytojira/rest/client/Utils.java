@@ -123,11 +123,11 @@ public class Utils {
 
 	public static void printJson(Map<String, Object> data) {
 
-		System.out.println(listToJsonString(data));
+		System.out.println(mapToJsonString(data));
 
 	}
 
-	public static String listToJsonString(Map<String, Object> data) {
+	public static String mapToJsonString(Map<String, Object> data) {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 		String s = gson.toJson(data);
 		s =removeStyleTags(s);

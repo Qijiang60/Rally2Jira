@@ -45,7 +45,7 @@ public class JiraOperations {
 				data.putAll(Utils.getJiraValue(key, mapping.get(key), release));
 			}
 			Utils.printJson(data);
-			ClientResponse response = api.doPost("/rest/api/latest/version", Utils.listToJsonString(data));
+			ClientResponse response = api.doPost("/rest/api/latest/version", Utils.mapToJsonString(data));
 			JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
 
 			System.out.println(jResponse);
@@ -77,13 +77,13 @@ public class JiraOperations {
 
 	public ClientResponse attachFile(String issueKey, File file) throws IOException {
 
-		return api.doMultipartPost("/rest/api/latest/issue/"+issueKey+"/attachments", file);
+		return api.doMultipartPost("/rest/api/latest/issue/" + issueKey + "/attachments", file);
 
 	}
 
 	public JsonObject createIssueInJira(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType) throws Exception {
 		Map<String, Object> postData = getIssueCreateMap(project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
-		ClientResponse response = api.doPost("/rest/api/latest/issue", Utils.listToJsonString(postData));
+		ClientResponse response = api.doPost("/rest/api/latest/issue", Utils.mapToJsonString(postData));
 		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
 		System.out.println(jResponse);
 		if (jResponse.get("errorMessages") != null) {
@@ -155,6 +155,16 @@ public class JiraOperations {
 	public JsonObject getRallyAttachment(String URL) {
 		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(api.doRallyGet(URL));
 		return jResponse;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void addComment(String issueKey, String comment) {
+		Map commentMap = new HashMap();
+		commentMap.put("body", comment);
+		ClientResponse response = api.doPost("/rest/api/latest/issue/"+issueKey+"/comment", Utils.mapToJsonString(commentMap));
+		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
+		System.out.println(jResponse);
+
 	}
 
 }

@@ -4,6 +4,10 @@ summary,Name
 description,Description
 labels[],Tags._refObjectName
 assignee.name,Owner._refObjectName
+state,State
+timetracking.originalEstimate,Estimate
+customfield_10201,Actuals
+timetracking.remainingEstimate,ToDo
 NULL,ObjectID
 NULL,WorkProduct
 NULL,Release
