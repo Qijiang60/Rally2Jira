@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -54,10 +56,39 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		createTasks(project);
-		createDefects(project);
-		createUserStories(project);
+		Set<String> allUsers = getAllUsers(project);
+		System.out.println(allUsers.size() + ": " + allUsers);
+		// createTasks(project);
+		// createDefects(project);
+		// createUserStories(project);
 
+	}
+
+	private Set<String> getAllUsers(JsonObject project) throws IOException {
+		Set<String> allUsers = new TreeSet<String>();
+		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		for (JsonElement jeTask : tasks) {
+			addOwnerToSet(allUsers, jeTask);
+		}
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+		for (JsonElement jeDefect : defects) {
+			addOwnerToSet(allUsers, jeDefect);
+		}
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+		for (JsonElement jeUserStory : userStories) {
+			addOwnerToSet(allUsers, jeUserStory);
+		}
+		return allUsers;
+	}
+
+	private void addOwnerToSet(Set<String> allUsers, JsonElement jeRallyWorkProduct) {
+		JsonObject rallyWorkProduct = jeRallyWorkProduct.getAsJsonObject();
+		if (isNotJsonNull(rallyWorkProduct, "Owner")) {
+			JsonObject owner = rallyWorkProduct.get("Owner").getAsJsonObject();
+			if (isNotJsonNull(owner, "_refObjectName")) {
+				allUsers.add(owner.get("_refObjectName").getAsString());
+			}
+		}
 	}
 
 	private void createTasks(JsonObject project) throws Exception {
