@@ -42,7 +42,7 @@ public class RallyToJira {
 
 	private void process() throws Exception {
 		JsonObject project = rally.getProjectByName("Workspace").get(0).getAsJsonObject();
-		//deleteAllIssuesInJira(project);
+		// deleteAllIssuesInJira(project);
 		createReleases(project);
 	}
 
@@ -236,7 +236,7 @@ public class RallyToJira {
 	private void uploadAttachmentToJira(JsonObject project, JsonObject attachment, JsonObject jiraIssue) throws Exception {
 		attachment = rally.findRallyObjectByObjectID(project, RallyObject.ATTACHMENT, attachment.get("ObjectID").getAsString());
 		String fileName = attachment.get("Name").getAsString();
-		String description = attachment.get("Description").getAsString();
+		String description = isNotJsonNull(attachment, "Description") ? attachment.get("Description").getAsString() : "";
 		JsonObject attachmentContent = jira.getRallyAttachment(attachment.get("Content").getAsJsonObject().get("_ref").getAsString());
 		String base64Content = attachmentContent.get("AttachmentContent").getAsJsonObject().get("Content").getAsString();
 		byte[] decodedString = Base64.decodeBase64(base64Content);
