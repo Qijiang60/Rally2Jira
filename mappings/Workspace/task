@@ -1,0 +1,16 @@
+JIRA,Rally
+customfield_10200,FormattedID
+summary,Name
+description,Description
+labels[],Tags._refObjectName
+timetracking.originalEstimate,Estimate
+timetracking.remainingEstimate,ToDo
+NULL,Owner._refObjectName
+NULL,Actuals
+NULL,Notes
+NULL,ObjectID
+NULL,WorkProduct
+NULL,Release
+NULL,Project
+NULL,State
+
