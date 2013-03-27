@@ -2,6 +2,7 @@ package com.ceb.rallytojira.rest.client;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -84,7 +85,7 @@ public class Utils {
 		if (elements == null) {
 			elements = new ArrayList<String>();
 			elementMap.put(artifactType.getCode(), elements);
-			FileReader fr = new FileReader("mappings/" + project + "/" + artifactType.getCode());
+			FileReader fr = getFileReader(project, artifactType.getCode());
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 
@@ -106,12 +107,20 @@ public class Utils {
 
 	}
 
+	private static FileReader getFileReader(String project, String artifactType) throws FileNotFoundException {
+		File f = new File("mappings/" + project + "/" + artifactType);
+		if (!f.exists()) {
+			f = new File("mappings/Common/" + artifactType);
+		}
+		return new FileReader(f);
+	}
+
 	public static Map<String, String> getElementMapping(RallyObject artifactType, String project) throws IOException {
 		Map<String, String> artifactMap = elementMapping.get(artifactType.getCode());
 		if (artifactMap == null) {
 			artifactMap = new HashMap<String, String>();
 			elementMapping.put(artifactType.getCode(), artifactMap);
-			FileReader fr = new FileReader("mappings/" + project + "/" + artifactType.getCode());
+			FileReader fr = getFileReader(project, artifactType.getCode());
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
@@ -135,7 +144,7 @@ public class Utils {
 	public static Map<String, String> getWorkflowStatusMapping(String project) throws IOException {
 		if (workflowStatusMapping == null) {
 			workflowStatusMapping = new HashMap<String, String>();
-			FileReader fr = new FileReader("mappings/" + project + "/workflow_status_mapping");
+			FileReader fr = getFileReader(project, "workflow_status_mapping");
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
@@ -159,7 +168,7 @@ public class Utils {
 	public static Map<String, String> getPriorityMapping(String project) throws IOException {
 		if (priorityMapping == null) {
 			priorityMapping = new HashMap<String, String>();
-			FileReader fr = new FileReader("mappings/" + project + "/priorities_mapping");
+			FileReader fr =  getFileReader(project, "priorities_mapping");
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
@@ -273,7 +282,7 @@ public class Utils {
 	public static String lookupJiraUsername(String rallyUsername) throws IOException {
 		if (jiraRallyUserMap == null) {
 			jiraRallyUserMap = new TreeMap<String, String>();
-			FileReader fr = new FileReader("mappings/usernames");
+			FileReader fr = new FileReader("mappings/Common/usernames");
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
