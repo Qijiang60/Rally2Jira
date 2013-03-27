@@ -119,7 +119,7 @@ public class JiraOperations {
 			issueData.put("fixVersions", versions);
 		}
 		for (String key : mapping.keySet()) {
-			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue,project);
+			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue, project);
 			if (jiraMap != null) {
 				String topKey = (String) jiraMap.keySet().toArray()[0];
 				if (issueData.containsKey(topKey)) {
@@ -146,7 +146,7 @@ public class JiraOperations {
 			issueData.putAll(parentStory);
 		}
 		postData.put("fields", issueData);
-//		Utils.printJson(postData);
+		// Utils.printJson(postData);
 		return postData;
 	}
 
@@ -213,7 +213,7 @@ public class JiraOperations {
 	public JsonObject updateWorkflowStatus(String project, String issueKey, String rallyStatus) throws Exception {
 		Map transitionMap = new HashMap();
 		String jiraTransitionId = Utils.getJiraTransitionId(project, rallyStatus);
-		if(jiraTransitionId.equals("1")){
+		if (jiraTransitionId.equals("1")) {
 			return null;
 		}
 		Map transitionIdMap = new HashMap();
@@ -230,7 +230,7 @@ public class JiraOperations {
 
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", jiraUsername);
-		Utils.printJson(m);
+		System.out.println(Utils.mapToJsonString(m) + " Rally user: " + rallyOwnerName);
 		ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
 		return processJiraResponse(response);
 	}

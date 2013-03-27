@@ -42,7 +42,7 @@ public class RallyToJira {
 
 	private void process() throws Exception {
 		JsonObject project = rally.getProjectByName("Workspace").get(0).getAsJsonObject();
-		deleteAllIssuesInJira(project);
+		//deleteAllIssuesInJira(project);
 		createReleases(project);
 	}
 
