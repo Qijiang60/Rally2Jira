@@ -69,22 +69,24 @@ public class RallyToJira {
 		Set<JsonObject> allUsers = getAllUsers(project);
 		System.out.println(allUsers.size());
 		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + Utils.getJsonObjectName(project).replaceAll(" ", "_") + ".psv"));
+		bw.write("\nRally DisplayName|Jira DisplayName|Rally UserName|Jira UserName|Disabled|Match");
 		for (JsonObject rallyUser : allUsers) {
-			System.out.println(rallyUser.get("UserName").getAsString());
-			String rallyLastname = isNotJsonNull(rallyUser, "LastName")?rallyUser.get("LastName").getAsString():"";
-			String rallyFirstname = isNotJsonNull(rallyUser, "FirstName")?rallyUser.get("FirstName").getAsString():"";
-			String rallyDisplayName = rallyLastname + ", " + rallyFirstname;
+			String rallyUserName = rallyUser.get("UserName").getAsString();
+			System.out.println(rallyUserName);
+			String rallyLastname = isNotJsonNull(rallyUser, "LastName") ? rallyUser.get("LastName").getAsString() : "";
+			String rallyFirstname = isNotJsonNull(rallyUser, "FirstName") ? rallyUser.get("FirstName").getAsString() : "";
+			String jiraSearch = rallyLastname + ", " + rallyFirstname;
 			try {
-				JsonObject jiraUser = jira.findJiraUser(rallyUser);
+				JsonObject jiraUser = jira.findJiraUser(jiraSearch);
 				String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
 				String jiraUserName = jiraUser.get("name").getAsString();
-				if (rallyDisplayName.equals(jiraDisplayName)) {
-					bw.write("\n" + rallyDisplayName + "|" + jiraDisplayName + "|" + jiraUserName + "|" + rallyUser.get("Disabled").getAsString() + "|Y");
+				if (jiraSearch.equals(jiraDisplayName)) {
+					bw.write("\n" + jiraSearch + "|" + jiraDisplayName + "|" + rallyUserName + "|" + jiraUserName + "|" + rallyUser.get("Disabled").getAsString() + "|Y");
 				} else {
-					bw.write("\n" + rallyDisplayName + "|" + jiraDisplayName + "|" + jiraUserName + "|" + rallyUser.get("Disabled").getAsString() + "|N");
+					bw.write("\n" + jiraSearch + "|" + jiraDisplayName + "|" + rallyUserName + "|" + jiraUserName + "|" + rallyUser.get("Disabled").getAsString() + "|N");
 				}
 			} catch (Exception ex) {
-				bw.write("\n" + rallyDisplayName + "|" + "" + "|" + "" + "|" + rallyUser.get("Disabled").getAsString() + "|Y");
+				bw.write("\n" + jiraSearch + "|" + "" + "|" + rallyUserName + "" + "|" + rallyUser.get("Disabled").getAsString() + "|N");
 			}
 			bw.flush();
 			if (doBreak()) {
