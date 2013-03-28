@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class PostgresDBApi {
 	static Connection con = null;
@@ -15,6 +16,16 @@ public class PostgresDBApi {
 	static ResultSet rs = null;
 	static SimpleDateFormat df = new SimpleDateFormat();;
 	static PreparedStatement updateIssue = null;
+
+	public static void main(String[] args) {
+		try {
+			updateIsueDates("1", (new Date()).toString(), (new Date()).toString());
+		} catch (ParseException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static void updateIsueDates(String databaseId, String creationDate, String lastUpdateDate) throws ParseException, SQLException {
 

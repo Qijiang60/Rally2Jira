@@ -8,7 +8,7 @@ import com.ceb.rallytojira.rest.api.JiraRestApi;
 public class JiraJsonClient {
 
 	public JiraRestApi getJiraRestApi() throws URISyntaxException {
-		return new JiraRestApi(new URI("http://scrumportal.executiveboard.com"),
+		return new JiraRestApi(new URI("http://172.22.26.20"),
 				"hagarwal", "Welcome345!");
 	}
 }
