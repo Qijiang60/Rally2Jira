@@ -71,8 +71,8 @@ public class RallyToJira {
 		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + Utils.getJsonObjectName(project).replaceAll(" ", "_") + ".csv"));
 		for (JsonObject rallyUser : allUsers) {
 			System.out.println(rallyUser.get("UserName").getAsString());
-			String rallyLastname = rallyUser.get("LastName").getAsString();
-			String rallyFirstname = rallyUser.get("FirstName").getAsString();
+			String rallyLastname = isNotJsonNull(rallyUser, "LastName")?rallyUser.get("LastName").getAsString():"";
+			String rallyFirstname = isNotJsonNull(rallyUser, "FirstName")?rallyUser.get("FirstName").getAsString():"";
 			String rallyDisplayName = rallyLastname + ", " + rallyFirstname;
 			try {
 				JsonObject jiraUser = jira.findJiraUser(rallyUser);
