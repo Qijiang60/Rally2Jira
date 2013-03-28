@@ -235,4 +235,12 @@ public class JiraOperations {
 		return processJiraResponse(response);
 	}
 
+	public JsonObject findJiraUser(JsonObject rallyUser) throws Exception {
+		String rallyUserDisplayName = rallyUser.get("DisplayName").getAsString();
+		ClientResponse response = api.doGet("/rest/api/latest/user?username="+Utils.lookupJiraUsername(rallyUserDisplayName));
+		JsonObject jResponse = processJiraResponse(response);
+		return jResponse;
+			
+	}
+
 }

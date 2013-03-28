@@ -2,7 +2,7 @@ package com.ceb.rallytojira.domain;
 
 public enum RallyObject {
 	PROJECT("project"), RELEASE("release"), ITERATION("iteration"), USER_STORY(
-			"hierarchicalrequirement"), DEFECT("defect"), TASK("task"), ATTACHMENT("attachment"), ATTACHMENT_CONTENT("AttachmentContent");
+			"hierarchicalrequirement"), DEFECT("defect"), TASK("task"), ATTACHMENT("attachment"), ATTACHMENT_CONTENT("AttachmentContent"), USER("User");
 
 	private String code;
 

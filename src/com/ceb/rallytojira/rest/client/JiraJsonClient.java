@@ -9,6 +9,6 @@ public class JiraJsonClient {
 
 	public JiraRestApi getJiraRestApi() throws URISyntaxException {
 		return new JiraRestApi(new URI("http://scrumportal.executiveboard.com"),
-				"hagarwal", "Welcome234!");
+				"hagarwal", "Welcome345!");
 	}
 }

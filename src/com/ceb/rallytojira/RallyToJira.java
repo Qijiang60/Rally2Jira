@@ -1,13 +1,15 @@
 package com.ceb.rallytojira;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -23,7 +25,7 @@ public class RallyToJira {
 	JiraOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
-	int limit = 100000;
+	int limit = 50000;
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -56,37 +58,69 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		Set<String> allUsers = getAllUsers(project);
-		System.out.println(allUsers.size() + ": " + allUsers);
+		Set<JsonObject> allUsers = getAllUsers(project);
+		System.out.println(allUsers.size());
+		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping"+Utils.getJsonObjectName(project).replaceAll(" ","_")));
+		for (JsonObject rallyUser : allUsers) {
+			String rallyLastname = rallyUser.get("LastName").getAsString();
+			String rallyFirstname = rallyUser.get("FirstName").getAsString();
+			String rallyDisplayName = rallyLastname + ", " + rallyFirstname;
+			try {
+				JsonObject jiraUser = jira.findJiraUser(rallyUser);
+				String jiraDisplayName = jiraUser.get("displayName").getAsString();
+				String jiraUserName = jiraUser.get("name").getAsString();
+				if (rallyDisplayName.equals(jiraDisplayName)) {
+					bw.write("\n"+rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",Y");
+				} else {
+					bw.write("\n"+rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",N");
+				}
+			} catch (Exception ex) {
+				bw.write("\n"+rallyDisplayName + "," + "" + "," + "" + "," + rallyUser.get("Disabled").getAsString() + ",Y");
+			}
+			bw.flush();
+			if (doBreak()) {
+				break;
+			}
+		}
+		bw.close();
 		// createTasks(project);
 		// createDefects(project);
 		// createUserStories(project);
 
 	}
 
-	private Set<String> getAllUsers(JsonObject project) throws IOException {
-		Set<String> allUsers = new TreeSet<String>();
+	private Set<JsonObject> getAllUsers(JsonObject project) throws IOException {
+		Set<JsonObject> allUsers = new HashSet<JsonObject>();
 		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
 		for (JsonElement jeTask : tasks) {
-			addOwnerToSet(allUsers, jeTask);
+			addOwnerToSet(allUsers, jeTask, project);
+			if (doBreak()) {
+				break;
+			}
 		}
 		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
 		for (JsonElement jeDefect : defects) {
-			addOwnerToSet(allUsers, jeDefect);
+			addOwnerToSet(allUsers, jeDefect, project);
+			if (doBreak()) {
+				break;
+			}
 		}
 		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
 		for (JsonElement jeUserStory : userStories) {
-			addOwnerToSet(allUsers, jeUserStory);
+			addOwnerToSet(allUsers, jeUserStory, project);
+			if (doBreak()) {
+				break;
+			}
 		}
 		return allUsers;
 	}
 
-	private void addOwnerToSet(Set<String> allUsers, JsonElement jeRallyWorkProduct) {
+	private void addOwnerToSet(Set<JsonObject> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
 		JsonObject rallyWorkProduct = jeRallyWorkProduct.getAsJsonObject();
 		if (isNotJsonNull(rallyWorkProduct, "Owner")) {
 			JsonObject owner = rallyWorkProduct.get("Owner").getAsJsonObject();
-			if (isNotJsonNull(owner, "_refObjectName")) {
-				allUsers.add(owner.get("_refObjectName").getAsString());
+			if (isNotJsonNull(owner, "ObjectID")) {
+				allUsers.add(rally.findRallyObjectByObjectID(project, RallyObject.USER, owner.get("ObjectID").getAsString()));
 			}
 		}
 	}
