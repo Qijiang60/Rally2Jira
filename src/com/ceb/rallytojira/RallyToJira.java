@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,7 +27,7 @@ public class RallyToJira {
 	JiraOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
-	int limit = 10000;
+	int limit = 2;
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -45,8 +47,8 @@ public class RallyToJira {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName("Workspace").get(0).getAsJsonObject();
-		// deleteAllIssuesInJira(project);
+		JsonObject project = rally.getProjectByName("Discussions").get(0).getAsJsonObject();
+		deleteAllIssuesInJira(project);
 		createReleases(project);
 	}
 
@@ -58,8 +60,8 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		createRallyJiraUserMap(project);
-		// createTasks(project);
+		//createRallyJiraUserMap(project);
+		createTasks(project);
 		// createDefects(project);
 		// createUserStories(project);
 
@@ -87,7 +89,7 @@ public class RallyToJira {
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
-				bw.write("\n" + rallyUserObjectID  + "\t" + jiraSearch + "\t" + "" + "\t" + rallyUserName + "\t" + "" + "\t" + rallyUser.get("Disabled").getAsString() + "\tN");
+				bw.write("\n" + rallyUserObjectID  + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t" + rallyUser.get("Disabled").getAsString() + "\tN");
 			}
 			bw.flush();
 			if (doBreak()) {
@@ -231,7 +233,12 @@ public class RallyToJira {
 		processWorkLog(project, rallyWorkProduct, jiraIssue);
 		processStatus(project, rallyWorkProduct, jiraIssue);
 		updateAssignee(project, rallyWorkProduct, jiraIssue);
+		updateCreateAndUpdateDate(project, rallyWorkProduct, jiraIssue);
 		return jiraIssue;
+	}
+
+	private void updateCreateAndUpdateDate(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws ParseException, SQLException {
+		jira.updateDatesInDatabase(Utils.getJsonObjectName(project), jiraIssue.get("id").getAsString(), rallyWorkProduct);
 	}
 
 	private void updateAssignee(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {

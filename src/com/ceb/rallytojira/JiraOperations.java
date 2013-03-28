@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -12,6 +14,7 @@ import java.util.Map;
 
 import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.api.JiraRestApi;
+import com.ceb.rallytojira.rest.api.PostgresDBApi;
 import com.ceb.rallytojira.rest.client.JiraJsonClient;
 import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
@@ -85,6 +88,7 @@ public class JiraOperations {
 
 	public JsonObject createIssueInJira(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType) throws Exception {
 		Map<String, Object> postData = getIssueCreateMap(project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
+		Utils.printJson(postData);
 		ClientResponse response = api.doPost("/rest/api/latest/issue", Utils.mapToJsonString(postData));
 		return processJiraResponse(response);
 	}
@@ -252,6 +256,14 @@ public class JiraOperations {
 			}
 		}
 		return null;
+	}
+
+	public void updateDatesInDatabase(String projectName, String databaseId, JsonObject rallyWorkProduct) throws ParseException, SQLException {
+		String creationDate = rallyWorkProduct.get("CreationDate").getAsString();
+		String lastUpdateDate = rallyWorkProduct.get("LastUpdateDate").getAsString();
+		System.out.println(databaseId + ", " + creationDate + ", " + lastUpdateDate);
+		PostgresDBApi.updateIsueDates(databaseId, creationDate, lastUpdateDate);
+
 	}
 
 }

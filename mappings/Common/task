@@ -13,4 +13,6 @@ NULL,WorkProduct
 NULL,Release
 NULL,Project
 NULL,State
+NULL,LastUpdateDate
+NULL,CreationDate
 
