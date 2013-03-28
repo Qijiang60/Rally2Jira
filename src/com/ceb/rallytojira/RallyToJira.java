@@ -25,7 +25,7 @@ public class RallyToJira {
 	JiraOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
-	int limit = 50000;
+	int limit = 1;
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -86,6 +86,7 @@ public class RallyToJira {
 					bw.write("\n" + jiraSearch + "|" + jiraDisplayName + "|" + rallyUserName + "|" + jiraUserName + "|" + rallyUser.get("Disabled").getAsString() + "|N");
 				}
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				bw.write("\n" + jiraSearch + "|" + "" + "|" + rallyUserName + "" + "|" + rallyUser.get("Disabled").getAsString() + "|N");
 			}
 			bw.flush();

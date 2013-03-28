@@ -3,6 +3,7 @@ package com.ceb.rallytojira;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -16,6 +17,7 @@ import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
 
 public class JiraOperations {
@@ -236,10 +238,21 @@ public class JiraOperations {
 	}
 
 	public JsonObject findJiraUser(String searchString) throws Exception {
-		ClientResponse response = api.doGet("/rest/api/latest/user/search?username="+searchString);
-		JsonObject jResponse = processJiraResponse(response);
-		return jResponse;
-			
+		ClientResponse response = api.doGet("/rest/api/latest/user/search?username=" + URLEncoder.encode(searchString, "UTF-8"));
+		JsonElement jElement = (new JsonParser()).parse(response.getEntity(String.class));
+		if (jElement.isJsonObject()) {
+			return jElement.getAsJsonObject();
+		} else {
+			if (jElement.isJsonArray()) {
+				JsonArray ja = jElement.getAsJsonArray();
+				if (ja.size() == 1) {
+					return ja.get(0).getAsJsonObject();
+				} else {
+					throw new Exception(ja.toString());
+				}
+			}
+		}
+		return null;
 	}
 
 }

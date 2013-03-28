@@ -1,25 +1,4 @@
 
-Kumar, Praveer|Kumar, Praveer|PKumar|false|Y
-Crook, Matt|||true|Y
-Bhatia, Mansha|Bhatia, Mehr|mbhatia|false|N
-Das, Joydeep|Das, Joydeep|JDas|true|Y
-Burke, Dave|Burke, Dave|dburke|true|Y
-Kumar, Ashish|Kumar, Ashish|AKumar|false|Y
-Alafoginis Vedder, Kristina|||false|Y
-Upadhyay, Bhuwan|Upadhyay, Bhuwan|BUpadhyay|false|Y
-, Cipriano|||true|Y
-Yahya, Atif|Yahya, Atif|ayahya|false|Y
-Raheja, Gaurav|Raheja, Gaurav|GRaheja|false|Y
-Khandpur, Vikas|Khandpur, Vikas|vkhandpur|false|Y
-Lockhart, Karen|Lockhart, Karen|klockhart|true|Y
-Tibebu, Mesfin|Tibebu, Mesfin|mtibebu|false|Y
-Rajan, Vivek|||false|Y
-Mukherjee, Ritwik|Mukherjee, Ritwik|rmukherjee|true|Y
-Kohli, Tarun|Kohli, Tarun|tkohli|false|Y
-Kumar, Ajit|Kumar, Ashish|AKumar|true|N
-Willis, Miranda|Willis, Miranda|MWillis|true|Y
-Dhawan, Amit|Dhawan, Amit|adhawan|false|Y
-Iwanicki, Stasia|Iwanicki, Stasia|siwanicki|true|Y
-, Dhejo|||false|Y
-Mutalik, Satish|Mutalik, Satish|smutalik|true|Y
-Bensen, Ted|Bensen, Ted|TBensen|true|Y
+Rally DisplayName|Jira DisplayName|Rally UserName|Jira UserName|Disabled|Match
+Tibebu, Mesfin|Tibebu, Mesfin|mtibebu@executiveboard.com|mtibebu|false|Y
+Rajan, Vivek|Rajan, Vivek|vivek.rajan@globallogic.com|VAditya|false|Y
