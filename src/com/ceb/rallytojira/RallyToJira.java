@@ -58,24 +58,33 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
+		createRallyJiraUserMap(project);
+		// createTasks(project);
+		// createDefects(project);
+		// createUserStories(project);
+
+	}
+
+	private void createRallyJiraUserMap(JsonObject project) throws IOException {
 		Set<JsonObject> allUsers = getAllUsers(project);
 		System.out.println(allUsers.size());
-		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping"+Utils.getJsonObjectName(project).replaceAll(" ","_")));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + Utils.getJsonObjectName(project).replaceAll(" ", "_") + ".csv"));
 		for (JsonObject rallyUser : allUsers) {
+			System.out.println(rallyUser.get("UserName").getAsString());
 			String rallyLastname = rallyUser.get("LastName").getAsString();
 			String rallyFirstname = rallyUser.get("FirstName").getAsString();
 			String rallyDisplayName = rallyLastname + ", " + rallyFirstname;
 			try {
 				JsonObject jiraUser = jira.findJiraUser(rallyUser);
-				String jiraDisplayName = jiraUser.get("displayName").getAsString();
+				String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
 				String jiraUserName = jiraUser.get("name").getAsString();
 				if (rallyDisplayName.equals(jiraDisplayName)) {
-					bw.write("\n"+rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",Y");
+					bw.write("\n" + rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",Y");
 				} else {
-					bw.write("\n"+rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",N");
+					bw.write("\n" + rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",N");
 				}
 			} catch (Exception ex) {
-				bw.write("\n"+rallyDisplayName + "," + "" + "," + "" + "," + rallyUser.get("Disabled").getAsString() + ",Y");
+				bw.write("\n" + rallyDisplayName + "," + "" + "," + "" + "," + rallyUser.get("Disabled").getAsString() + ",Y");
 			}
 			bw.flush();
 			if (doBreak()) {
@@ -83,10 +92,6 @@ public class RallyToJira {
 			}
 		}
 		bw.close();
-		// createTasks(project);
-		// createDefects(project);
-		// createUserStories(project);
-
 	}
 
 	private Set<JsonObject> getAllUsers(JsonObject project) throws IOException {
