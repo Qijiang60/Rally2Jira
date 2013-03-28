@@ -227,12 +227,11 @@ public class JiraOperations {
 
 	}
 
-	public JsonObject updateIssueAssignee(String projectName, String issueKey, String rallyOwnerName) throws Exception {
-		String jiraUsername = Utils.lookupJiraUsername(rallyOwnerName);
-
+	public JsonObject updateIssueAssignee(String projectName, String issueKey, String rallyOwnerObjectID) throws Exception {
+		String jiraUsername = Utils.lookupJiraUsername(projectName, rallyOwnerObjectID);
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", jiraUsername);
-		System.out.println(Utils.mapToJsonString(m) + " Rally user: " + rallyOwnerName);
+		System.out.println(Utils.mapToJsonString(m) + " Rally user: " + rallyOwnerObjectID);
 		ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
 		return processJiraResponse(response);
 	}

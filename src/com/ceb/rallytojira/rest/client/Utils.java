@@ -30,6 +30,7 @@ import com.sun.jersey.api.client.ClientResponse;
 
 public class Utils {
 	private static Map<String, String> jiraRallyUserMap;
+	private static Map<String, Boolean> userStatusMap;
 	private static Map<String, Map<String, String>> elementMapping = new HashMap<String, Map<String, String>>();
 	private static Map<String, String> workflowStatusMapping;
 	private static Map<String, String> priorityMapping;
@@ -168,7 +169,7 @@ public class Utils {
 	public static Map<String, String> getPriorityMapping(String project) throws IOException {
 		if (priorityMapping == null) {
 			priorityMapping = new HashMap<String, String>();
-			FileReader fr =  getFileReader(project, "priorities_mapping");
+			FileReader fr = getFileReader(project, "priorities_mapping");
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
@@ -247,7 +248,7 @@ public class Utils {
 		if (jiraKey.equals("reporter.name")) {
 			List<String> jiraUser = new ArrayList<String>();
 			for (String s : values) {
-				jiraUser.add(lookupJiraUsername(s));
+				jiraUser.add(lookupJiraUsername(getJsonObjectName(project), s));
 			}
 			values = jiraUser;
 		}
@@ -279,35 +280,45 @@ public class Utils {
 		return null;
 	}
 
-	public static String lookupJiraUsername(String rallyUsername) throws IOException {
+	public static String lookupJiraUsername(String projectName, String rallyUserObjectID) throws IOException {
 		if (jiraRallyUserMap == null) {
-			jiraRallyUserMap = new TreeMap<String, String>();
-			FileReader fr = new FileReader("mappings/Common/usernames");
-			BufferedReader br = new BufferedReader(fr);
-			String stringRead = br.readLine();
-			int i = 0;
-			while (stringRead != null) {
-				if (i > 0 && Utils.isNotEmpty(stringRead)) {
-					StringTokenizer st = new StringTokenizer(stringRead, ",");
-					String rallyname = st.nextToken();
-					String jiraname = st.nextToken();
-					jiraRallyUserMap.put(rallyname, jiraname);
+			createJiraRallyUserMap(projectName);
+		}
+		return jiraRallyUserMap.get(rallyUserObjectID);
+	}
 
-				}
-				i++;
-				stringRead = br.readLine();
+	public static Boolean getUserStatus(String projectName, String jiraUsername) throws IOException {
+		if (userStatusMap == null) {
+			createJiraRallyUserMap(projectName);
+		}
+		return userStatusMap.get(jiraUsername);
+	}
+
+	private static void createJiraRallyUserMap(String projectName) throws FileNotFoundException, IOException {
+		jiraRallyUserMap = new TreeMap<String, String>();
+		userStatusMap = new TreeMap<String, Boolean>();
+		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" + projectName);
+		BufferedReader br = new BufferedReader(fr);
+		String stringRead = br.readLine();
+		int i = 0;
+		while (stringRead != null) {
+			if (i > 0 && Utils.isNotEmpty(stringRead)) {
+				StringTokenizer st = new StringTokenizer(stringRead, "\t");
+				String rallyObjectID = st.nextToken();
+				String rallyDisplayName = st.nextToken();
+				String jiraDisplayName = st.nextToken();
+				String rallyUserName = st.nextToken();
+				String jiraUserName = st.nextToken();
+				String disabled = st.nextToken();
+				String match = st.nextToken();
+				jiraRallyUserMap.put(rallyObjectID, jiraUserName);
+				userStatusMap.put(jiraUserName, Boolean.parseBoolean(disabled));
+
 			}
-			br.close();
+			i++;
+			stringRead = br.readLine();
 		}
-		if (jiraRallyUserMap.containsKey(rallyUsername)) {
-			return jiraRallyUserMap.get(rallyUsername);
-		}
-		String constructUsername = rallyUsername;
-		if (rallyUsername.contains(" ")) {
-			constructUsername = rallyUsername.substring(0, 1) + rallyUsername.substring(rallyUsername.indexOf(" ") + 1);
-		}
-
-		return constructUsername;
+		br.close();
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
