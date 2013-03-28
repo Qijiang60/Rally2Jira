@@ -68,7 +68,7 @@ public class RallyToJira {
 	private void createRallyJiraUserMap(JsonObject project) throws IOException {
 		Set<JsonObject> allUsers = getAllUsers(project);
 		System.out.println(allUsers.size());
-		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + Utils.getJsonObjectName(project).replaceAll(" ", "_") + ".csv"));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + Utils.getJsonObjectName(project).replaceAll(" ", "_") + ".psv"));
 		for (JsonObject rallyUser : allUsers) {
 			System.out.println(rallyUser.get("UserName").getAsString());
 			String rallyLastname = isNotJsonNull(rallyUser, "LastName")?rallyUser.get("LastName").getAsString():"";
@@ -79,12 +79,12 @@ public class RallyToJira {
 				String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
 				String jiraUserName = jiraUser.get("name").getAsString();
 				if (rallyDisplayName.equals(jiraDisplayName)) {
-					bw.write("\n" + rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",Y");
+					bw.write("\n" + rallyDisplayName + "|" + jiraDisplayName + "|" + jiraUserName + "|" + rallyUser.get("Disabled").getAsString() + "|Y");
 				} else {
-					bw.write("\n" + rallyDisplayName + "," + jiraDisplayName + "," + jiraUserName + "," + rallyUser.get("Disabled").getAsString() + ",N");
+					bw.write("\n" + rallyDisplayName + "|" + jiraDisplayName + "|" + jiraUserName + "|" + rallyUser.get("Disabled").getAsString() + "|N");
 				}
 			} catch (Exception ex) {
-				bw.write("\n" + rallyDisplayName + "," + "" + "," + "" + "," + rallyUser.get("Disabled").getAsString() + ",Y");
+				bw.write("\n" + rallyDisplayName + "|" + "" + "|" + "" + "|" + rallyUser.get("Disabled").getAsString() + "|Y");
 			}
 			bw.flush();
 			if (doBreak()) {
