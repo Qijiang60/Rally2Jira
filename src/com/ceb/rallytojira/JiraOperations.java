@@ -14,7 +14,6 @@ import java.util.Map;
 
 import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.api.JiraRestApi;
-import com.ceb.rallytojira.rest.api.PostgresDBApi;
 import com.ceb.rallytojira.rest.client.JiraJsonClient;
 import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
@@ -216,12 +215,8 @@ public class JiraOperations {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public JsonObject updateWorkflowStatus(String project, String issueKey, String rallyStatus) throws Exception {
+	public JsonObject updateWorkflowStatus(String issueKey, String jiraTransitionId) throws Exception {
 		Map transitionMap = new HashMap();
-		String jiraTransitionId = Utils.getJiraTransitionId(project, rallyStatus);
-		if (jiraTransitionId.equals("1")) {
-			return null;
-		}
 		Map transitionIdMap = new HashMap();
 		transitionIdMap.put("id", jiraTransitionId);
 		transitionMap.put("transition", transitionIdMap);
@@ -258,12 +253,17 @@ public class JiraOperations {
 		return null;
 	}
 
-	public void updateDatesInDatabase(String projectName, String databaseId, JsonObject rallyWorkProduct) throws ParseException, SQLException {
+	public void updateDatesInDatabase(String projectName, String databaseId, JsonObject rallyWorkProduct, boolean stateChanged) throws Exception {
 		String creationDate = rallyWorkProduct.get("CreationDate").getAsString();
 		String lastUpdateDate = rallyWorkProduct.get("LastUpdateDate").getAsString();
 		System.out.println(databaseId + ", " + creationDate + ", " + lastUpdateDate);
-		PostgresDBApi.updateIsueDates(databaseId, creationDate, lastUpdateDate);
-
+		Map<String, Object> data = new HashMap<String, Object>();
+		data.put("issueDbId", databaseId);
+		data.put("creationDate", creationDate);
+		data.put("lastUpdateDate", lastUpdateDate);
+		data.put("stateChanged", stateChanged);
+		ClientResponse response = api.doPost("/rest/db/latest/update/issue/createAndUpdateDate", Utils.mapToJsonString(data));
+		System.out.println(processJiraResponse(response));
 	}
 
 }

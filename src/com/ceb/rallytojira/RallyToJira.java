@@ -6,8 +6,6 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,7 +25,7 @@ public class RallyToJira {
 	JiraOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
-	int limit = 2;
+	int limit = 1;
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -60,7 +58,7 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		//createRallyJiraUserMap(project);
+		// createRallyJiraUserMap(project);
 		createTasks(project);
 		// createDefects(project);
 		// createUserStories(project);
@@ -83,13 +81,16 @@ public class RallyToJira {
 				String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
 				String jiraUserName = jiraUser.get("name").getAsString();
 				if (jiraSearch.equals(jiraDisplayName)) {
-					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString() + "\tY");
+					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
+							+ "\tY");
 				} else {
-					bw.write("\n" + rallyUserObjectID  + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString() + "\tN");
+					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
+							+ "\tN");
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
-				bw.write("\n" + rallyUserObjectID  + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t" + rallyUser.get("Disabled").getAsString() + "\tN");
+				bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t"
+						+ rallyUser.get("Disabled").getAsString() + "\tN");
 			}
 			bw.flush();
 			if (doBreak()) {
@@ -231,14 +232,14 @@ public class RallyToJira {
 		processAttachments(project, rallyWorkProduct, jiraIssue);
 		processNotes(project, rallyWorkProduct, jiraIssue);
 		processWorkLog(project, rallyWorkProduct, jiraIssue);
-		processStatus(project, rallyWorkProduct, jiraIssue);
+		boolean stateChanged = processStatus(project, rallyWorkProduct, jiraIssue);
 		updateAssignee(project, rallyWorkProduct, jiraIssue);
-		updateCreateAndUpdateDate(project, rallyWorkProduct, jiraIssue);
+		updateCreateAndUpdateDate(project, rallyWorkProduct, jiraIssue,stateChanged);
 		return jiraIssue;
 	}
 
-	private void updateCreateAndUpdateDate(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws ParseException, SQLException {
-		jira.updateDatesInDatabase(Utils.getJsonObjectName(project), jiraIssue.get("id").getAsString(), rallyWorkProduct);
+	private void updateCreateAndUpdateDate(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue, boolean stateChanged) throws Exception {
+		jira.updateDatesInDatabase(Utils.getJsonObjectName(project), jiraIssue.get("id").getAsString(), rallyWorkProduct, stateChanged);
 	}
 
 	private void updateAssignee(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
@@ -257,13 +258,24 @@ public class RallyToJira {
 		}
 	}
 
-	private void processStatus(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
+	private boolean processStatus(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		if (isNotJsonNull(rallyWorkProduct, "State")) {
-			jira.updateWorkflowStatus(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("State").getAsString());
+			String rallyStatus = rallyWorkProduct.get("State").getAsString();
+			String jiraTransitionId = Utils.getJiraTransitionId(Utils.getJsonObjectName(project), rallyStatus);
+			if (jiraTransitionId.equals("1")) {
+				return false;
+			}
+			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId);
 		}
 		if (isNotJsonNull(rallyWorkProduct, "ScheduleState")) {
-			jira.updateWorkflowStatus(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("ScheduleState").getAsString());
+			String rallyStatus = rallyWorkProduct.get("ScheduleState").getAsString();
+			String jiraTransitionId = Utils.getJiraTransitionId(Utils.getJsonObjectName(project), rallyStatus);
+			if (jiraTransitionId.equals("1")) {
+				return false;
+			}
+			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId);
 		}
+		return true;
 
 	}
 
