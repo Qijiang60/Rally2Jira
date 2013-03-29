@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -220,19 +218,24 @@ public class JiraOperations {
 		Map transitionIdMap = new HashMap();
 		transitionIdMap.put("id", jiraTransitionId);
 		transitionMap.put("transition", transitionIdMap);
-		Utils.printJson(transitionMap);
+		// Utils.printJson(transitionMap);
 		ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/transitions", Utils.mapToJsonString(transitionMap));
 		return processJiraResponse(response);
 
 	}
 
-	public JsonObject updateIssueAssignee(String projectName, String issueKey, String rallyOwnerObjectID) throws Exception {
+	public void updateIssueAssignee(String projectName, String issueKey, String rallyOwnerObjectID) throws Exception {
 		String jiraUsername = Utils.lookupJiraUsername(projectName, rallyOwnerObjectID);
-		Map<String, Object> m = new HashMap<String, Object>();
-		m.put("name", jiraUsername);
-		System.out.println(Utils.mapToJsonString(m) + " Rally user: " + rallyOwnerObjectID);
-		ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
-		return processJiraResponse(response);
+
+		if (Utils.isEmpty(jiraUsername)) {
+			System.err.println(" Rally user: " +
+					rallyOwnerObjectID + ", Jira User " + jiraUsername);
+		} else {
+			Map<String, Object> m = new HashMap<String, Object>();
+			m.put("name", jiraUsername);
+			ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
+			processJiraResponse(response);
+		}
 	}
 
 	public JsonObject findJiraUser(String searchString) throws Exception {
@@ -256,14 +259,16 @@ public class JiraOperations {
 	public void updateDatesInDatabase(String projectName, String databaseId, JsonObject rallyWorkProduct, boolean stateChanged) throws Exception {
 		String creationDate = rallyWorkProduct.get("CreationDate").getAsString();
 		String lastUpdateDate = rallyWorkProduct.get("LastUpdateDate").getAsString();
-		System.out.println(databaseId + ", " + creationDate + ", " + lastUpdateDate);
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("issueDbId", databaseId);
 		data.put("creationDate", creationDate);
 		data.put("lastUpdateDate", lastUpdateDate);
 		data.put("stateChanged", stateChanged);
 		ClientResponse response = api.doPost("/rest/db/latest/update/issue/createAndUpdateDate", Utils.mapToJsonString(data));
-		System.out.println(processJiraResponse(response));
+		JsonObject jObj = processJiraResponse(response);
+		if(jObj.get("errors").getAsJsonArray().size()>0){
+			throw new Exception(jObj.toString());
+		}
 	}
 
 }

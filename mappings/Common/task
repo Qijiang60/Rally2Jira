@@ -5,7 +5,7 @@ description,Description
 labels[],Tags._refObjectName
 timetracking.originalEstimate,Estimate
 timetracking.remainingEstimate,ToDo
-NULL,Owner._refObjectName
+NULL,Owner.ObjectID
 NULL,Actuals
 NULL,Notes
 NULL,ObjectID

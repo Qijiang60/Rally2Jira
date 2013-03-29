@@ -1,15 +1,11 @@
 package com.ceb.rallytojira;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -25,7 +21,8 @@ public class RallyToJira {
 	JiraOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
-	int limit = 1;
+	int limit = 3;
+	int progress = 0;
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -39,13 +36,8 @@ public class RallyToJira {
 
 	}
 
-	private void deleteAllIssuesInJira(JsonObject project) throws IOException {
-		jira.deleteAllIssues(project);
-
-	}
-
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName("Discussions").get(0).getAsJsonObject();
+		JsonObject project = rally.getProjectByName(RallyToJiraSetup.PROJECT).get(0).getAsJsonObject();
 		deleteAllIssuesInJira(project);
 		createReleases(project);
 	}
@@ -58,87 +50,17 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		// createRallyJiraUserMap(project);
 		createTasks(project);
-		// createDefects(project);
-		// createUserStories(project);
+		createDefects(project);
+		createUserStories(project);
 
-	}
-
-	private void createRallyJiraUserMap(JsonObject project) throws IOException {
-		Set<String> allUsers = getAllUsers(project);
-		System.out.println(allUsers.size());
-		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + Utils.getJsonObjectName(project).replaceAll(" ", "_")));
-		bw.write("\nRally ObjectID\tRally DisplayName\tJira DisplayName\tRally UserName\tJira UserName\tDisabled\tMatch");
-		for (String rallyUserObjectID : allUsers) {
-			JsonObject rallyUser = rally.findRallyObjectByObjectID(project, RallyObject.USER, rallyUserObjectID);
-			String rallyUserName = rallyUser.get("UserName").getAsString();
-			String rallyLastname = isNotJsonNull(rallyUser, "LastName") ? rallyUser.get("LastName").getAsString() : "";
-			String rallyFirstname = isNotJsonNull(rallyUser, "FirstName") ? rallyUser.get("FirstName").getAsString() : "";
-			String jiraSearch = rallyLastname + ", " + rallyFirstname;
-			try {
-				JsonObject jiraUser = jira.findJiraUser(jiraSearch);
-				String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
-				String jiraUserName = jiraUser.get("name").getAsString();
-				if (jiraSearch.equals(jiraDisplayName)) {
-					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
-							+ "\tY");
-				} else {
-					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
-							+ "\tN");
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t"
-						+ rallyUser.get("Disabled").getAsString() + "\tN");
-			}
-			bw.flush();
-			if (doBreak()) {
-				break;
-			}
-		}
-		bw.close();
-	}
-
-	private Set<String> getAllUsers(JsonObject project) throws IOException {
-		Set<String> allUsers = new HashSet<String>();
-		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
-		for (JsonElement jeTask : tasks) {
-			addOwnerToSet(allUsers, jeTask, project);
-			if (doBreak()) {
-				break;
-			}
-		}
-		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
-		for (JsonElement jeDefect : defects) {
-			addOwnerToSet(allUsers, jeDefect, project);
-			if (doBreak()) {
-				break;
-			}
-		}
-		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
-		for (JsonElement jeUserStory : userStories) {
-			addOwnerToSet(allUsers, jeUserStory, project);
-			if (doBreak()) {
-				break;
-			}
-		}
-		return allUsers;
-	}
-
-	private void addOwnerToSet(Set<String> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
-		JsonObject rallyWorkProduct = jeRallyWorkProduct.getAsJsonObject();
-		if (isNotJsonNull(rallyWorkProduct, "Owner")) {
-			JsonObject owner = rallyWorkProduct.get("Owner").getAsJsonObject();
-			if (isNotJsonNull(owner, "ObjectID")) {
-				allUsers.add(owner.get("ObjectID").getAsString());
-			}
-		}
 	}
 
 	private void createTasks(JsonObject project) throws Exception {
 		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		int totalTasks = tasks.size();
 		for (JsonElement jeTask : tasks) {
+			System.out.println("**TASK " + progress++ + " of " + totalTasks + " *************************************");
 			JsonObject task = jeTask.getAsJsonObject();
 			findOrCreateIssueInJiraForTask(project, task);
 			if (doBreak()) {
@@ -147,14 +69,33 @@ public class RallyToJira {
 		}
 	}
 
-	private boolean doBreak() {
-		counter++;
-		if (counter > limit) {
-			System.out.println(counter);
-			counter = 0;
-			return true;
+	private void createDefects(JsonObject project) throws Exception {
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+		progress = 0;
+		int totalDefects = defects.size();
+		for (JsonElement jeDefect : defects) {
+			System.out.println("**DEFECT " + progress++ + " of " + totalDefects + " *************************************");
+
+			JsonObject defect = jeDefect.getAsJsonObject();
+			findOrCreateIssueInJiraForDefect(project, defect.get("FormattedID").getAsString());
+			if (doBreak()) {
+				break;
+			}
 		}
-		return false;
+	}
+
+	private void createUserStories(JsonObject project) throws Exception {
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+		progress = 0;
+		int totalUserStories = userStories.size();
+		for (JsonElement jeUserStory : userStories) {
+			System.out.println("**USER STORY " + progress++ + " of " + totalUserStories + " *************************************");
+			JsonObject userStory = jeUserStory.getAsJsonObject();
+			findOrCreateIssueInJiraForUserStory(project, userStory.get("FormattedID").getAsString());
+			if (doBreak()) {
+				break;
+			}
+		}
 	}
 
 	private void findOrCreateIssueInJiraForTask(JsonObject project, JsonObject task) throws Exception {
@@ -170,15 +111,13 @@ public class RallyToJira {
 				String workProductType = rallyTaskWorkProduct.get("_type").getAsString();
 				String workProductFormattedID = rallyTaskWorkProduct.get("FormattedID").getAsString();
 				if (workProductType.equalsIgnoreCase("hierarchicalrequirement")) {
-					rallyTaskWorkProduct = rally.findRallyObjectByFormatteID(project, workProductFormattedID, RallyObject.USER_STORY);
-					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyTaskWorkProduct);
-					addParentFields(task, jiraParentIssue, rallyTaskWorkProduct);
+					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, workProductFormattedID);
+					addParentFields(task, jiraParentIssue);
 					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 				} else {
 					if (workProductType.equalsIgnoreCase("defect")) {
-						rallyTaskWorkProduct = rally.findRallyObjectByFormatteID(project, workProductFormattedID, RallyObject.DEFECT);
-						JsonObject jiraParentIssue = findOrCreateIssueInJiraForDefect(project, rallyTaskWorkProduct);
-						addParentFields(task, jiraParentIssue, rallyTaskWorkProduct);
+						JsonObject jiraParentIssue = findOrCreateIssueInJiraForDefect(project, workProductFormattedID);
+						addParentFields(task, jiraParentIssue);
 						jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 					} else {
 						jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Task");
@@ -186,40 +125,38 @@ public class RallyToJira {
 
 				}
 			}
-
 		}
 	}
 
-	private JsonElement getParentKey(JsonObject jiraParentIssue) {
-		JsonElement parentsParent = jiraParentIssue.get("parent");
-		if (parentsParent == null || parentsParent.isJsonNull() || parentsParent.getAsJsonObject().get("key") == null || parentsParent.getAsJsonObject().get("key").isJsonNull()) {
-			return jiraParentIssue.get("key");
-		}
-		return parentsParent.getAsJsonObject().get("key");
-	}
-
-	private void createDefects(JsonObject project) throws Exception {
-		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
-		for (JsonElement jeDefect : defects) {
-			JsonObject defect = jeDefect.getAsJsonObject();
-			findOrCreateIssueInJiraForDefect(project, defect);
-			if (doBreak()) {
-				break;
+	private JsonObject findOrCreateIssueInJiraForUserStory(JsonObject project, String userStoryFormattedID) throws Exception {
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(userStoryFormattedID);
+		if (Utils.isEmpty(jiraIssue)) {
+			JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
+			String jiraVersionId = getJiraVersionIdForRelease(userStory);
+			if (isJsonNull(userStory, "Parent")) {
+				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
+			} else {
+				String parentUserStoryFormattedID = userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString();
+				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, parentUserStoryFormattedID);
+				addParentFields(userStory, jiraParentIssue);
+				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
 			}
 		}
+		return jiraIssue;
 	}
 
-	private JsonObject findOrCreateIssueInJiraForDefect(JsonObject project, JsonObject defect) throws Exception {
-		String rallyFormattedId = defect.get("FormattedID").getAsString();
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(rallyFormattedId);
-		String jiraVersionId = getJiraVersionIdForRelease(defect);
+	private JsonObject findOrCreateIssueInJiraForDefect(JsonObject project, String defectFormattedID) throws Exception {
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(defectFormattedID);
+
 		if (Utils.isEmpty(jiraIssue)) {
-			if (defect.get("Requirement") == null || defect.get("Requirement").isJsonNull()) {
+			JsonObject defect = rally.findRallyObjectByFormatteID(project, defectFormattedID, RallyObject.DEFECT);
+			String jiraVersionId = getJiraVersionIdForRelease(defect);
+			if (isJsonNull(defect, "Requirement")) {
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
 			} else {
-				JsonObject rallyDefectUserStory = rally.findRallyObjectByFormatteID(project, defect.get("Requirement").getAsJsonObject().get("FormattedID").getAsString(), RallyObject.USER_STORY);
-				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyDefectUserStory);
-				addParentFields(defect, jiraParentIssue, rallyDefectUserStory);
+				String parentDefectFormattedID = defect.get("Requirement").getAsJsonObject().get("FormattedID").getAsString();
+				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, parentDefectFormattedID);
+				addParentFields(defect, jiraParentIssue);
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
 			}
 		}
@@ -234,7 +171,7 @@ public class RallyToJira {
 		processWorkLog(project, rallyWorkProduct, jiraIssue);
 		boolean stateChanged = processStatus(project, rallyWorkProduct, jiraIssue);
 		updateAssignee(project, rallyWorkProduct, jiraIssue);
-		updateCreateAndUpdateDate(project, rallyWorkProduct, jiraIssue,stateChanged);
+		updateCreateAndUpdateDate(project, rallyWorkProduct, jiraIssue, stateChanged);
 		return jiraIssue;
 	}
 
@@ -250,8 +187,8 @@ public class RallyToJira {
 				JsonElement jeRallyOwner = rallyWorkProduct.get("rally-parent-owner");
 				if (jeRallyOwner != null && jeRallyOwner.isJsonObject()) {
 					JsonObject rallyOwner = jeRallyOwner.getAsJsonObject();
-					if (isNotJsonNull(rallyOwner.getAsJsonObject(), "_refObjectName")) {
-						jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyOwner.get("_refObjectName").getAsString());
+					if (isNotJsonNull(rallyOwner.getAsJsonObject(), "ObjectID")) {
+						jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyOwner.get("ObjectID").getAsString());
 					}
 				}
 			}
@@ -344,38 +281,17 @@ public class RallyToJira {
 
 	}
 
-	private void createUserStories(JsonObject project) throws Exception {
-		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
-
-		for (JsonElement jeUserStory : userStories) {
-			JsonObject userStory = jeUserStory.getAsJsonObject();
-			findOrCreateIssueInJiraForUserStory(project, userStory);
-			if (doBreak()) {
-				break;
-			}
+	private JsonElement getParentKey(JsonObject jiraParentIssue) {
+		JsonElement parentsParent = jiraParentIssue.get("parent");
+		if (parentsParent == null || isJsonNull(parentsParent.getAsJsonObject(), "key")) {
+			return jiraParentIssue.get("key");
 		}
+		return parentsParent.getAsJsonObject().get("key");
 	}
 
-	private JsonObject findOrCreateIssueInJiraForUserStory(JsonObject project, JsonObject userStory) throws Exception {
-		String rallyFormattedId = userStory.get("FormattedID").getAsString();
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(rallyFormattedId);
-		String jiraVersionId = getJiraVersionIdForRelease(userStory);
-		if (Utils.isEmpty(jiraIssue)) {
-			if (userStory.get("Parent") == null || userStory.get("Parent").isJsonNull()) {
-				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
-			} else {
-				JsonObject rallyParentUserStory = rally.findRallyObjectByFormatteID(project, userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString(), RallyObject.USER_STORY);
-				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, rallyParentUserStory);
-				addParentFields(userStory, jiraParentIssue, rallyParentUserStory);
-				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
-			}
-		}
-		return jiraIssue;
-	}
-
-	private void addParentFields(JsonObject rallyWorkProduct, JsonObject jiraParentIssue, JsonObject rallyParentWorkProduct) {
+	private void addParentFields(JsonObject rallyWorkProduct, JsonObject jiraParentIssue) {
 		rallyWorkProduct.add("jira-parent-key", getParentKey(jiraParentIssue));
-		rallyWorkProduct.add("rally-parent-owner", rallyParentWorkProduct.get("Owner"));
+		rallyWorkProduct.add("rally-parent-owner", jiraParentIssue.get("Owner"));
 	}
 
 	private String getJiraVersionIdForRelease(JsonObject rallyObject) {
@@ -383,5 +299,20 @@ public class RallyToJira {
 			return releaseVersionMap.get(rallyObject.get("Release").getAsJsonObject().get("ObjectID").getAsString());
 		}
 		return null;
+	}
+
+	private boolean doBreak() {
+		counter++;
+		if (counter > limit) {
+			System.out.println(counter);
+			counter = 0;
+			return true;
+		}
+		return false;
+	}
+
+	private void deleteAllIssuesInJira(JsonObject project) throws IOException {
+		jira.deleteAllIssues(project);
+
 	}
 }
