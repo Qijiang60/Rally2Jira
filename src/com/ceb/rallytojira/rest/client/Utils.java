@@ -255,9 +255,21 @@ public class Utils {
 		if (jiraKey.equals("priority.name")) {
 			List<String> translatedPriority = new ArrayList<String>();
 			for (String s : values) {
-				translatedPriority.add(getJiraPriority(getJsonObjectName(project), s));
+				String jiraPriority = getJiraPriority(getJsonObjectName(project), s);
+				translatedPriority.add(jiraPriority.substring(0, jiraPriority.indexOf("~")));
 			}
 			values = translatedPriority;
+		}
+		if (jiraKey.equals("summary")) {
+			List<String> truncatedSummary = new ArrayList<String>();
+			for (String s : values) {
+				if (s.length() > 255) {
+					truncatedSummary.add(s.substring(0, 255));
+				} else {
+					truncatedSummary.add(s);
+				}
+			}
+			values = truncatedSummary;
 		}
 		if (jiraKey.startsWith("timetracking")) {
 			List<String> timeInHours = new ArrayList<String>();
@@ -266,8 +278,11 @@ public class Utils {
 			}
 			values = timeInHours;
 		}
-		Map jiraMap = createJiraMap(jiraKey, values);
-		return jiraMap;
+		if (values.size() > 0) {
+			Map jiraMap = createJiraMap(jiraKey, values);
+			return jiraMap;
+		}
+		return null;
 	}
 
 	private static String getJiraPriority(String project, String rallyPriority) throws IOException {
@@ -367,11 +382,17 @@ public class Utils {
 				if (je.isJsonArray()) {
 					JsonArray jArr = je.getAsJsonArray();
 					for (JsonElement jel : jArr) {
-						lValues.add(jel.getAsJsonObject().get(key).getAsString());
+						String val = jel.getAsJsonObject().get(key).getAsString();
+						if (Utils.isNotEmpty(val)) {
+							lValues.add(val);
+						}
 					}
 				} else {
 					if (!je.getAsJsonObject().get(key).isJsonNull()) {
-						lValues.add(je.getAsJsonObject().get(key).getAsString());
+						String val = je.getAsJsonObject().get(key).getAsString();
+						if (Utils.isNotEmpty(val)) {
+							lValues.add(val);
+						}
 					}
 				}
 			}

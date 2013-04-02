@@ -1,6 +1,6 @@
 JIRA,Rally
-Blocker,Resolve Immediately
-Critical,High Attention
-Major,Normal
-Minor,Low
-
+Blocker~1,Resolve Immediately
+Critical~2,High Attention
+Major~3,Normal
+Minor~4,Low
+Major~5,None

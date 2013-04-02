@@ -43,6 +43,7 @@ public class RallyJsonClient {
 			}
 			request.setQueryFilter(queryFilter);
 		}
+		request.setLimit(100000);
 		QueryResponse queryResponse = api.query(request);
 		return queryResponse.getResults();
 
