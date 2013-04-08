@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
@@ -414,5 +415,13 @@ public class Utils {
 			}
 		}
 		return null;
+	}
+
+	public static String setToString(Set<String> setOfStrings) {
+		StringBuffer sb = new StringBuffer();
+		for(String s : setOfStrings){
+			sb.append(s +"\n");
+		}
+		return sb.toString();
 	}
 }
