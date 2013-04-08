@@ -243,7 +243,7 @@ public class Utils {
 			for (String s : values) {
 				labelsWithoutSpaces.add(s.replace(" ", ""));
 			}
-			labelsWithoutSpaces.add("TestAutomation-Workspace");
+//			labelsWithoutSpaces.add("Infrastructure");
 			values = labelsWithoutSpaces;
 		}
 		if (jiraKey.equals("reporter.name")) {

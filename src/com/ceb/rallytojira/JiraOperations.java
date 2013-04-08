@@ -182,10 +182,13 @@ public class JiraOperations {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public JsonObject addComment(String issueKey, String comment) throws Exception {
-		Map commentMap = new HashMap();
-		commentMap.put("body", comment);
-		ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/comment", Utils.mapToJsonString(commentMap));
-		return processJiraResponse(response);
+		if (Utils.isNotEmpty(comment)) {
+			Map commentMap = new HashMap();
+			commentMap.put("body", comment);
+			ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/comment", Utils.mapToJsonString(commentMap));
+			return processJiraResponse(response);
+		}
+		return null;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -272,6 +275,15 @@ public class JiraOperations {
 		if (jObj.get("errors").getAsJsonArray().size() > 0) {
 			throw new Exception(jObj.toString());
 		}
+	}
+
+	public void updateIssueAssigneeAsRallyJiraMigrationUser(String issueKey) throws Exception {
+
+			Map<String, Object> m = new HashMap<String, Object>();
+			m.put("name", "rally_jira_migration");
+			ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
+			processJiraResponse(response);
+		
 	}
 
 }

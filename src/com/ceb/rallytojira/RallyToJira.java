@@ -23,6 +23,7 @@ public class RallyToJira {
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
+	public static String PROJECT = "Discussions";
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -37,8 +38,8 @@ public class RallyToJira {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName(RallyToJiraSetup.PROJECT).get(0).getAsJsonObject();
-		//deleteAllIssuesInJira(project);
+		JsonObject project = rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
+		deleteAllIssuesInJira(project);
 		createReleases(project);
 	}
 
@@ -50,14 +51,17 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		createTasks(project);
-		createDefects(project);
-		createUserStories(project);
+		 createTasks(project);
+		 createDefects(project);
+		 createUserStories(project);
 
 	}
 
+
+
 	private void createTasks(JsonObject project) throws Exception {
 		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		progress = 0;
 		int totalTasks = tasks.size();
 		for (JsonElement jeTask : tasks) {
 			System.out.println("**TASK " + progress++ + " of " + totalTasks + " *************************************");
@@ -255,7 +259,7 @@ public class RallyToJira {
 
 	private void processAttachments(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		JsonElement jeAattachments = rallyWorkProduct.get("Attachments");
-		if (!Utils.isEmpty(jeAattachments)) {
+		if (isNotJsonNull(rallyWorkProduct, "Attachments")) {
 			JsonArray attachments = jeAattachments.getAsJsonArray();
 			for (JsonElement attachment : attachments) {
 				uploadAttachmentToJira(project, attachment.getAsJsonObject(), jiraIssue);

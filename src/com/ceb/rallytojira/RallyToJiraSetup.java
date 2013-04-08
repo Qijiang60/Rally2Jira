@@ -23,7 +23,7 @@ public class RallyToJiraSetup {
 	int counter = 0;
 	int limit = 100000;
 	int progress = 0;
-	public static String PROJECT = "Test Automation - Workspace";
+	
 
 	public RallyToJiraSetup() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -38,7 +38,7 @@ public class RallyToJiraSetup {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
+		JsonObject project = rally.getProjectByName(RallyToJira.PROJECT).get(0).getAsJsonObject();
 		createRallyJiraUserMap(project);
 	}
 
