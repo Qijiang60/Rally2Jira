@@ -23,7 +23,7 @@ public class RallyToJiraSetup {
 	int counter = 0;
 	int limit = 100000;
 	int progress = 0;
-	public static String PROJECT = "Discussions";
+	public static String PROJECT = "Test Automation - Workspace";
 
 	public RallyToJiraSetup() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -49,6 +49,9 @@ public class RallyToJiraSetup {
 		bw.write("\nRally ObjectID\tRally DisplayName\tJira DisplayName\tRally UserName\tJira UserName\tDisabled\tMatch");
 		for (String rallyUserObjectID : allUsers) {
 			JsonObject rallyUser = rally.findRallyObjectByObjectID(project, RallyObject.USER, rallyUserObjectID);
+			if(Utils.isEmpty(rallyUser)){
+				continue;
+			}
 			String rallyUserName = rallyUser.get("UserName").getAsString();
 			String rallyLastname = isNotJsonNull(rallyUser, "LastName") ? rallyUser.get("LastName").getAsString() : "";
 			String rallyFirstname = isNotJsonNull(rallyUser, "FirstName") ? rallyUser.get("FirstName").getAsString() : "";
