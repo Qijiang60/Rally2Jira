@@ -38,7 +38,7 @@ public class RallyToJira {
 
 	private void process() throws Exception {
 		JsonObject project = rally.getProjectByName(RallyToJiraSetup.PROJECT).get(0).getAsJsonObject();
-		// deleteAllIssuesInJira(project);
+		//deleteAllIssuesInJira(project);
 		createReleases(project);
 	}
 
@@ -196,16 +196,16 @@ public class RallyToJira {
 	}
 
 	private boolean processStatus(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
-		if (isNotJsonNull(rallyWorkProduct, "State")) {
-			String rallyStatus = rallyWorkProduct.get("State").getAsString();
+		if (isNotJsonNull(rallyWorkProduct, "ScheduleState")) {
+			String rallyStatus = rallyWorkProduct.get("ScheduleState").getAsString();
 			String jiraTransitionId = Utils.getJiraTransitionId(Utils.getJsonObjectName(project), rallyStatus);
 			if (jiraTransitionId.equals("1")) {
 				return false;
 			}
 			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId);
 		}
-		if (isNotJsonNull(rallyWorkProduct, "ScheduleState")) {
-			String rallyStatus = rallyWorkProduct.get("ScheduleState").getAsString();
+		if (isNotJsonNull(rallyWorkProduct, "State")) {
+			String rallyStatus = rallyWorkProduct.get("State").getAsString();
 			String jiraTransitionId = Utils.getJiraTransitionId(Utils.getJsonObjectName(project), rallyStatus);
 			if (jiraTransitionId.equals("1")) {
 				return false;
@@ -246,7 +246,9 @@ public class RallyToJira {
 
 	private void processNotes(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		if (isNotJsonNull(rallyWorkProduct, "Notes")) {
-			jira.addComment(jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Notes").getAsString());
+			if (Utils.isNotEmpty(rallyWorkProduct.get("Notes").getAsString())) {
+				jira.addComment(jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Notes").getAsString());
+			}
 		}
 
 	}

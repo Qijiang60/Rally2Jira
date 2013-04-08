@@ -312,7 +312,7 @@ public class Utils {
 	private static void createJiraRallyUserMap(String projectName) throws FileNotFoundException, IOException {
 		jiraRallyUserMap = new TreeMap<String, String>();
 		userStatusMap = new TreeMap<String, Boolean>();
-		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" + projectName);
+		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" + projectName.replaceAll(" ", "_"));
 		BufferedReader br = new BufferedReader(fr);
 		String stringRead = br.readLine();
 		int i = 0;

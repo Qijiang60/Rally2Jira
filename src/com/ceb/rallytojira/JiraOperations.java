@@ -44,7 +44,10 @@ public class JiraOperations {
 			data.put("project", Utils.getJiraProjectNameForRallyProject(project));
 
 			for (String key : mapping.keySet()) {
-				data.putAll(Utils.getJiraValue(key, mapping.get(key), release, project));
+				Map m = Utils.getJiraValue(key, mapping.get(key), release, project);
+				if (Utils.isNotEmpty(m)) {
+					data.putAll(m);
+				}
 			}
 			Utils.printJson(data);
 			ClientResponse response = api.doPost("/rest/api/latest/version", Utils.mapToJsonString(data));
@@ -266,7 +269,7 @@ public class JiraOperations {
 		data.put("stateChanged", stateChanged);
 		ClientResponse response = api.doPost("/rest/db/latest/update/issue/createAndUpdateDate", Utils.mapToJsonString(data));
 		JsonObject jObj = processJiraResponse(response);
-		if(jObj.get("errors").getAsJsonArray().size()>0){
+		if (jObj.get("errors").getAsJsonArray().size() > 0) {
 			throw new Exception(jObj.toString());
 		}
 	}
