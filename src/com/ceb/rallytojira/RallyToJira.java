@@ -23,7 +23,7 @@ public class RallyToJira {
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
-	public static String PROJECT = "Web Expansion";
+	public static String PROJECT = "NGW Registration and Peer Networking";
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();

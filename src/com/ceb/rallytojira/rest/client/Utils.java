@@ -244,13 +244,19 @@ public class Utils {
 			for (String s : values) {
 				labelsWithoutSpaces.add(s.replace(" ", ""));
 			}
-
+			labelsWithoutSpaces.add("Iconoculture");
 			values = labelsWithoutSpaces;
 		}
 		if (jiraKey.equals("reporter.name")) {
 			List<String> jiraUser = new ArrayList<String>();
 			for (String s : values) {
-				jiraUser.add(lookupJiraUsername(getJsonObjectName(project), s));
+				String lookupJiraUsername = lookupJiraUsername(getJsonObjectName(project), s);
+				if (Utils.isNotEmpty(lookupJiraUsername)) {
+					jiraUser.add(lookupJiraUsername);
+				}
+			}
+			if (jiraUser.size() == 0) {
+				jiraUser.add("rally_jira_migration");
 			}
 			values = jiraUser;
 		}
@@ -273,6 +279,7 @@ public class Utils {
 			}
 			values = truncatedSummary;
 		}
+
 		if (jiraKey.startsWith("timetracking")) {
 			List<String> timeInHours = new ArrayList<String>();
 			for (String s : values) {
@@ -419,8 +426,8 @@ public class Utils {
 
 	public static String setToString(Set<String> setOfStrings) {
 		StringBuffer sb = new StringBuffer();
-		for(String s : setOfStrings){
-			sb.append(s +"\n");
+		for (String s : setOfStrings) {
+			sb.append(s + "\n");
 		}
 		return sb.toString();
 	}

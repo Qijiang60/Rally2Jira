@@ -65,7 +65,7 @@ public class JiraOperations {
 		JsonArray projectVersions = findProjectVersions(project);
 		for (JsonElement version : projectVersions) {
 			if (version.getAsJsonObject().get("name").getAsString()
-					.equals(versionName.replaceAll("  "," "))) {
+					.equals(versionName.replaceAll("  ", " "))) {
 				return version.getAsJsonObject().get("id").getAsString();
 			}
 		}
@@ -187,7 +187,7 @@ public class JiraOperations {
 		String s = Utils.mapToJsonString(commentMap);
 		if (Utils.isNotEmpty(comment) && !"{}".equalsIgnoreCase(s)) {
 			ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/comment", Utils.mapToJsonString(commentMap));
-			//return processJiraResponse(response);
+			// return processJiraResponse(response);
 		}
 		return null;
 	}
@@ -287,8 +287,42 @@ public class JiraOperations {
 
 	}
 
-	public void addUserToProjectRoles(JsonObject project, String jiraUserName, String[] roles) {
-		
-	}
+	public void addUserToProjectRoles(String jiraProjectKey, String jiraUserName, String[] roles) throws Exception {
+		ClientResponse response = api.doGet("/rest/api/latest/project/" + jiraProjectKey + "/role");
+		jiraUserName = jiraUserName.trim();
+		JsonObject projectRoles = Utils.jerseyRepsonseToJsonObject(response);
+		ClientResponse userRoleResp = api.doGet(projectRoles.get("Users").getAsString().substring(20));
+		JsonObject oUsersRole = Utils.jerseyRepsonseToJsonObject(userRoleResp);
+		ClientResponse developersRoleResp = api.doGet(projectRoles.get("Developers").getAsString().substring(20));
+		JsonObject oDevelopersRole = Utils.jerseyRepsonseToJsonObject(developersRoleResp);
+		System.out.println(jiraUserName);
 
+		Map m = new HashMap();
+		List u = new ArrayList();
+		u.add(jiraUserName);
+		m.put("user", u);
+		String s = Utils.mapToJsonString(m);
+		System.out.println(s);
+		ClientResponse resp = api.doPost("/rest/api/latest/project/" + jiraProjectKey + "/role" + "/" + oUsersRole.get("id").getAsString(), s);
+		try {
+			processJiraResponse(resp);
+			System.out.println("Added " + jiraUserName + " to Users");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		Map m1 = new HashMap();
+		List u1 = new ArrayList();
+		u1.add(jiraUserName);
+		m1.put("user", u);
+		String s1 = Utils.mapToJsonString(m1);
+		System.out.println(s1);
+		resp = api.doPost("/rest/api/latest/project/" + jiraProjectKey + "/role" + "/" + oDevelopersRole.get("id").getAsString(), s1);
+		try {
+			processJiraResponse(resp);
+			System.out.println("Added " + jiraUserName + " to Users");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

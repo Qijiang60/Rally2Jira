@@ -2,18 +2,12 @@ package com.ceb.rallytojira;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.Utils;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class RallyToJiraSetup {
@@ -39,10 +33,14 @@ public class RallyToJiraSetup {
 
 	private void process() throws Exception {
 		JsonObject project = rally.getProjectByName(RallyToJira.PROJECT).get(0).getAsJsonObject();
-		addUsersToProjectRole(project);
+		String jiraProjectKey = Utils.getJiraProjectNameForRallyProject(project);
+		addUsersToProjectRole(jiraProjectKey);
 	}
 
-	private void addUsersToProjectRole(JsonObject project) throws IOException {
+	private void addUsersToProjectRole(String jiraProjectKey) throws Exception {
+		jira.addUserToProjectRoles(jiraProjectKey, "rally_jira_migration", new String[] { "Developers", "Users" });
+		jira.addUserToProjectRoles(jiraProjectKey, "hagarwal", new String[] { "Developers", "Users" });
+		jira.addUserToProjectRoles(jiraProjectKey, "tberg", new String[] { "Developers", "Users" });
 		BufferedReader br = new BufferedReader(new FileReader("mappings/jira_rally_user_mapping_" + RallyToJira.PROJECT.replaceAll(" ", "_")));
 		String line = br.readLine();
 		while (line != null) {
@@ -56,13 +54,14 @@ public class RallyToJiraSetup {
 				String jiraUserName = st.nextToken();
 				String disable = st.nextToken();
 				String match = st.nextToken();
-				jira.addUserToProjectRoles(project, jiraUserName, new String[]{"Developers","Users"});
-				
+				if (Utils.isNotEmpty(jiraUserName)) {
+					jira.addUserToProjectRoles(jiraProjectKey, jiraUserName, new String[] { "Developers", "Users" });
+				}
+
 			}
 			line = br.readLine();
 		}
 		br.close();
 	}
-
 
 }
