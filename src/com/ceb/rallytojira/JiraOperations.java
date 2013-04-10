@@ -65,7 +65,7 @@ public class JiraOperations {
 		JsonArray projectVersions = findProjectVersions(project);
 		for (JsonElement version : projectVersions) {
 			if (version.getAsJsonObject().get("name").getAsString()
-					.equals(versionName)) {
+					.equals(versionName.replaceAll("  "," "))) {
 				return version.getAsJsonObject().get("id").getAsString();
 			}
 		}
@@ -182,11 +182,12 @@ public class JiraOperations {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public JsonObject addComment(String issueKey, String comment) throws Exception {
-		if (Utils.isNotEmpty(comment)) {
-			Map commentMap = new HashMap();
-			commentMap.put("body", comment);
+		Map commentMap = new HashMap();
+		commentMap.put("body", comment);
+		String s = Utils.mapToJsonString(commentMap);
+		if (Utils.isNotEmpty(comment) && !"{}".equalsIgnoreCase(s)) {
 			ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/comment", Utils.mapToJsonString(commentMap));
-			return processJiraResponse(response);
+			//return processJiraResponse(response);
 		}
 		return null;
 	}
@@ -279,10 +280,14 @@ public class JiraOperations {
 
 	public void updateIssueAssigneeAsRallyJiraMigrationUser(String issueKey) throws Exception {
 
-			Map<String, Object> m = new HashMap<String, Object>();
-			m.put("name", "rally_jira_migration");
-			ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
-			processJiraResponse(response);
+		Map<String, Object> m = new HashMap<String, Object>();
+		m.put("name", "rally_jira_migration");
+		ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
+		processJiraResponse(response);
+
+	}
+
+	public void addUserToProjectRoles(JsonObject project, String jiraUserName, String[] roles) {
 		
 	}
 

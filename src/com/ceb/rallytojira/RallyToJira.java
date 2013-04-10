@@ -23,7 +23,7 @@ public class RallyToJira {
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
-	public static String PROJECT = "Iconoculture";
+	public static String PROJECT = "Web Expansion";
 
 	public RallyToJira() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -51,9 +51,9 @@ public class RallyToJira {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		 createTasks(project);
-		 createDefects(project);
 		 createUserStories(project);
+		 createDefects(project);
+		 createTasks(project);
 
 	}
 
@@ -67,9 +67,9 @@ public class RallyToJira {
 			System.out.println("**TASK " + progress++ + " of " + totalTasks + " *************************************");
 			JsonObject task = jeTask.getAsJsonObject();
 			findOrCreateIssueInJiraForTask(project, task);
-			if (doBreak()) {
-				break;
-			}
+//			if (doBreak()) {
+//				break;
+//			}
 		}
 	}
 
@@ -82,9 +82,9 @@ public class RallyToJira {
 
 			JsonObject defect = jeDefect.getAsJsonObject();
 			findOrCreateIssueInJiraForDefect(project, defect.get("FormattedID").getAsString());
-			if (doBreak()) {
-				break;
-			}
+//			if (doBreak()) {
+//				break;
+//			}
 		}
 	}
 
@@ -96,9 +96,9 @@ public class RallyToJira {
 			System.out.println("**USER STORY " + progress++ + " of " + totalUserStories + " *************************************");
 			JsonObject userStory = jeUserStory.getAsJsonObject();
 			findOrCreateIssueInJiraForUserStory(project, userStory.get("FormattedID").getAsString());
-			if (doBreak()) {
-				break;
-			}
+//			if (doBreak()) {
+//				break;
+//			}
 		}
 	}
 
