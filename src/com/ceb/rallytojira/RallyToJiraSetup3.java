@@ -39,7 +39,7 @@ public class RallyToJiraSetup3 {
 
 	private void process() throws Exception {
 		JsonObject project = rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
-		//deleteAllIssuesInJira(project);
+		// deleteAllIssuesInJira(project);
 		createReleases(project);
 	}
 
@@ -51,13 +51,11 @@ public class RallyToJiraSetup3 {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		 createUserStories(project);
-		 createDefects(project);
-		 createTasks(project);
+		// createUserStories(project);
+		createDefects(project);
+		createTasks(project);
 
 	}
-
-
 
 	private void createTasks(JsonObject project) throws Exception {
 		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
@@ -67,9 +65,9 @@ public class RallyToJiraSetup3 {
 			System.out.println("**TASK " + progress++ + " of " + totalTasks + " *************************************");
 			JsonObject task = jeTask.getAsJsonObject();
 			findOrCreateIssueInJiraForTask(project, task);
-//			if (doBreak()) {
-//				break;
-//			}
+			// if (doBreak()) {
+			// break;
+			// }
 		}
 	}
 
@@ -82,9 +80,9 @@ public class RallyToJiraSetup3 {
 
 			JsonObject defect = jeDefect.getAsJsonObject();
 			findOrCreateIssueInJiraForDefect(project, defect.get("FormattedID").getAsString());
-//			if (doBreak()) {
-//				break;
-//			}
+			// if (doBreak()) {
+			// break;
+			// }
 		}
 	}
 
@@ -96,15 +94,15 @@ public class RallyToJiraSetup3 {
 			System.out.println("**USER STORY " + progress++ + " of " + totalUserStories + " *************************************");
 			JsonObject userStory = jeUserStory.getAsJsonObject();
 			findOrCreateIssueInJiraForUserStory(project, userStory.get("FormattedID").getAsString());
-//			if (doBreak()) {
-//				break;
-//			}
+			// if (doBreak()) {
+			// break;
+			// }
 		}
 	}
 
 	private void findOrCreateIssueInJiraForTask(JsonObject project, JsonObject task) throws Exception {
 		String rallyFormattedId = task.get("FormattedID").getAsString();
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(rallyFormattedId);
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(project), rallyFormattedId);
 		String jiraVersionId = getJiraVersionIdForRelease(task);
 		if (Utils.isEmpty(jiraIssue)) {
 
@@ -133,9 +131,9 @@ public class RallyToJiraSetup3 {
 	}
 
 	private JsonObject findOrCreateIssueInJiraForUserStory(JsonObject project, String userStoryFormattedID) throws Exception {
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(userStoryFormattedID);
-		if (Utils.isEmpty(jiraIssue)) {
-			JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(project), userStoryFormattedID);
+		JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
+		if (Utils.isNotEmpty(userStory)) {
 			String jiraVersionId = getJiraVersionIdForRelease(userStory);
 			if (isJsonNull(userStory, "Parent")) {
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
@@ -150,7 +148,7 @@ public class RallyToJiraSetup3 {
 	}
 
 	private JsonObject findOrCreateIssueInJiraForDefect(JsonObject project, String defectFormattedID) throws Exception {
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(defectFormattedID);
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(project), defectFormattedID);
 
 		if (Utils.isEmpty(jiraIssue)) {
 			JsonObject defect = rally.findRallyObjectByFormatteID(project, defectFormattedID, RallyObject.DEFECT);
@@ -160,8 +158,12 @@ public class RallyToJiraSetup3 {
 			} else {
 				String parentDefectFormattedID = defect.get("Requirement").getAsJsonObject().get("FormattedID").getAsString();
 				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, parentDefectFormattedID);
-				addParentFields(defect, jiraParentIssue);
-				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
+				if (Utils.isNotEmpty(jiraParentIssue)) {
+					addParentFields(defect, jiraParentIssue);
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
+				} else {
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
+				}
 			}
 		}
 		return jiraIssue;
@@ -203,10 +205,10 @@ public class RallyToJiraSetup3 {
 		if (isNotJsonNull(rallyWorkProduct, "ScheduleState")) {
 			String rallyStatus = rallyWorkProduct.get("ScheduleState").getAsString();
 			String jiraTransitionId = Utils.getJiraTransitionId(Utils.getJsonObjectName(project), rallyStatus);
-			if (jiraTransitionId.equals("1")) {
+			if ("1".equals(jiraTransitionId)) {
 				return false;
 			}
-			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId);
+			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId, rallyStatus);
 		}
 		if (isNotJsonNull(rallyWorkProduct, "State")) {
 			String rallyStatus = rallyWorkProduct.get("State").getAsString();
@@ -214,7 +216,7 @@ public class RallyToJiraSetup3 {
 			if (jiraTransitionId.equals("1")) {
 				return false;
 			}
-			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId);
+			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId, rallyStatus);
 		}
 		return true;
 

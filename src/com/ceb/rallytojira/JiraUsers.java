@@ -52,5 +52,9 @@ public class JiraUsers {
 		System.out.println("**************************************************************************************************");
 		System.out.println(Utils.setToString(inActiveUsers));
 	}
+	
+	public void addUserToGroup(String username, String group){
+		
+	}
 
 }

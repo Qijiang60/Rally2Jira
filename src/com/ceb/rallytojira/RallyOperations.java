@@ -11,6 +11,7 @@ import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.RallyJsonClient;
 import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class RallyOperations {
@@ -52,7 +53,12 @@ public class RallyOperations {
 				Utils.getJsonObjectName(project), workProductType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("FormattedID", formattedID);
-		return client.searchObjects(workProductType, filter, dataElements).get(0).getAsJsonObject();
+		JsonArray arr = client.searchObjects(workProductType, filter, dataElements);
+		if (arr.size() == 1) {
+			return arr.get(0).getAsJsonObject();
+		}
+
+		return null;
 	}
 
 	public JsonArray getRallyObjectsForProject(JsonObject project, RallyObject objectType) throws IOException {

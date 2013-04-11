@@ -156,12 +156,18 @@ public class JiraOperations {
 		return postData;
 	}
 
-	JsonObject findIssueByRallyFormattedID(String rallyFormattedId) {
+	JsonObject findIssueByRallyFormattedID(String projectKey, String rallyFormattedId) {
 		String url = "/rest/api/latest/search?jql=Rally_FormattedID~" + rallyFormattedId;
 		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
+
 		if (issues.size() > 0) {
-			return issues.get(0).getAsJsonObject();
+			for (JsonElement je : issues) {
+				if (je.getAsJsonObject().get("key").getAsString().startsWith(projectKey + "-")) {
+					return je.getAsJsonObject();
+				}
+			}
 		}
+
 		return null;
 	}
 
@@ -220,14 +226,19 @@ public class JiraOperations {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public JsonObject updateWorkflowStatus(String issueKey, String jiraTransitionId) throws Exception {
+	public void updateWorkflowStatus(String issueKey, String jiraTransitionId, String rallyStatus) throws Exception {
 		Map transitionMap = new HashMap();
 		Map transitionIdMap = new HashMap();
 		transitionIdMap.put("id", jiraTransitionId);
 		transitionMap.put("transition", transitionIdMap);
 		// Utils.printJson(transitionMap);
 		ClientResponse response = api.doPost("/rest/api/latest/issue/" + issueKey + "/transitions", Utils.mapToJsonString(transitionMap));
-		return processJiraResponse(response);
+		try {
+			processJiraResponse(response);
+		} catch (Exception e) {
+			System.out.println("Rally status: " + rallyStatus);
+			throw e;
+		}
 
 	}
 
@@ -290,10 +301,11 @@ public class JiraOperations {
 	public void addUserToProjectRoles(String jiraProjectKey, String jiraUserName, String[] roles) throws Exception {
 		ClientResponse response = api.doGet("/rest/api/latest/project/" + jiraProjectKey + "/role");
 		jiraUserName = jiraUserName.trim();
+		int index = 35;
 		JsonObject projectRoles = Utils.jerseyRepsonseToJsonObject(response);
-		ClientResponse userRoleResp = api.doGet(projectRoles.get("Users").getAsString().substring(20));
+		ClientResponse userRoleResp = api.doGet(projectRoles.get("Users").getAsString().substring(index));
 		JsonObject oUsersRole = Utils.jerseyRepsonseToJsonObject(userRoleResp);
-		ClientResponse developersRoleResp = api.doGet(projectRoles.get("Developers").getAsString().substring(20));
+		ClientResponse developersRoleResp = api.doGet(projectRoles.get("Developers").getAsString().substring(index));
 		JsonObject oDevelopersRole = Utils.jerseyRepsonseToJsonObject(developersRoleResp);
 		System.out.println(jiraUserName);
 

@@ -8,4 +8,11 @@ JIRA,Rally
 7.Closed;2,Closed
 8.Resolved;5,Fixed;Fixed
 9.Resolved;5,Known;Known
+10.Accepted;711,CEB Accepted
+11.In Progress;4,QA in Progress
+12.Resolved;5,Passed by Ness
+13.Resolved;5,Not a defect
+14.Resolved;5,Not able to reproduce
+15.Resolved;5,Deferred
+16.Resolved;5,Duplicate
 
