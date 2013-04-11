@@ -15,7 +15,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class RallyToJira {
+public class RallyToJiraSetup3 {
 
 	RallyOperations rally;
 	JiraOperations jira;
@@ -23,16 +23,16 @@ public class RallyToJira {
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
-	public static String PROJECT = "NGW Registration and Peer Networking";
+	public static String PROJECT = "Technology Roadmap Builder";
 
-	public RallyToJira() throws URISyntaxException {
+	public RallyToJiraSetup3() throws URISyntaxException {
 		rally = new RallyOperations();
 		jira = new JiraOperations();
 	}
 
 	public static void main(String[] args) throws URISyntaxException,
 			Exception {
-		RallyToJira rallyToJira = new RallyToJira();
+		RallyToJiraSetup3 rallyToJira = new RallyToJiraSetup3();
 		rallyToJira.process();
 
 	}

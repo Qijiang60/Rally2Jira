@@ -38,7 +38,7 @@ public class RallyToJiraSetup1 {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName(RallyToJira.PROJECT).get(0).getAsJsonObject();
+		JsonObject project = rally.getProjectByName(RallyToJiraSetup3.PROJECT).get(0).getAsJsonObject();
 		createRallyJiraUserMap(project);
 	}
 
