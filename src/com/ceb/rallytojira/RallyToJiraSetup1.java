@@ -85,11 +85,13 @@ public class RallyToJiraSetup1 {
 			addOwnerToSet(allUsers, jeTask, project);
 
 		}
+		tasks = null;
 		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
 		for (JsonElement jeDefect : defects) {
 			addOwnerToSet(allUsers, jeDefect, project);
 
 		}
+		defects = null;
 		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
 		for (JsonElement jeUserStory : userStories) {
 			addOwnerToSet(allUsers, jeUserStory, project);
