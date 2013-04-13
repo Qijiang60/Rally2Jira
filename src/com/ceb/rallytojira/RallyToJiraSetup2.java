@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
 public class RallyToJiraSetup2 {
 
 	RallyOperations rally;
-	JiraOperations jira;
+	JiraRestOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
 	int limit = 100000;
@@ -21,7 +21,7 @@ public class RallyToJiraSetup2 {
 
 	public RallyToJiraSetup2() throws URISyntaxException {
 		rally = new RallyOperations();
-		jira = new JiraOperations();
+		jira = new JiraRestOperations();
 	}
 
 	public static void main(String[] args) throws URISyntaxException,

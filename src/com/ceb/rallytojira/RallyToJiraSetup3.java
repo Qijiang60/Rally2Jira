@@ -18,16 +18,16 @@ import com.google.gson.JsonObject;
 public class RallyToJiraSetup3 {
 
 	RallyOperations rally;
-	JiraOperations jira;
+	JiraRestOperations jira;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
-	public static String PROJECT = "LE Move to CWS Integrated Backend";
+	public static String PROJECT = "Technology Roadmap Builder";
 
 	public RallyToJiraSetup3() throws URISyntaxException {
 		rally = new RallyOperations();
-		jira = new JiraOperations();
+		jira = new JiraRestOperations();
 	}
 
 	public static void main(String[] args) throws URISyntaxException,
@@ -53,7 +53,7 @@ public class RallyToJiraSetup3 {
 
 		createUserStories(project);
 		createDefects(project);
- 		createTasks(project);
+		createTasks(project);
 
 	}
 

@@ -20,10 +20,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
 
-public class JiraOperations {
+public class JiraRestOperations {
 	JiraRestApi api;
 
-	public JiraOperations() throws URISyntaxException {
+	public JiraRestOperations() throws URISyntaxException {
 		JiraJsonClient client = new JiraJsonClient();
 		api = client.getJiraRestApi();
 	}
@@ -337,4 +337,5 @@ public class JiraOperations {
 			e.printStackTrace();
 		}
 	}
+
 }

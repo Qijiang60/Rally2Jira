@@ -11,7 +11,6 @@ import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.RallyJsonClient;
 import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class RallyOperations {

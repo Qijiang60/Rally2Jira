@@ -21,5 +21,10 @@
 	<classpathentry kind="lib" path="lib/jericho-html-3.3.jar"/>
 	<classpathentry kind="lib" path="lib/commons-codec-1.7.jar"/>
 	<classpathentry kind="lib" path="lib/postgresql-9.2-1002.jdbc4.jar"/>
+	<classpathentry kind="lib" path="lib/jira-soap-5.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/axis-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/jaxrpc-api-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-discovery-0.5.jar"/>
+	<classpathentry kind="lib" path="lib/wsdl4j-1.6.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
