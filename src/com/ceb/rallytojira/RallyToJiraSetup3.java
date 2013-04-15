@@ -59,13 +59,13 @@ public class RallyToJiraSetup3 {
 			JsonObject project = rally.getProjectByName(projectName).get(0).getAsJsonObject();
 			Utils.reinitialize();
 			System.out.println(projectName + ", " + Utils.getJsonObjectName(project) + ", " + Utils.getJiraProjectNameForRallyProject(project));
-//			try {
-//				while (deleteAllIssuesInJira(project)) {
-//					System.out.println("deleting ...");
-//				}
-//			} catch (Exception e) {
-//
-//			}
+			// try {
+			// while (deleteAllIssuesInJira(project)) {
+			// System.out.println("deleting ...");
+			// }
+			// } catch (Exception e) {
+			//
+			// }
 			// deleteDuplicates(project);
 			createReleases(project);
 
@@ -196,14 +196,16 @@ public class RallyToJiraSetup3 {
 		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(project), userStoryFormattedID);
 		if (Utils.isEmpty(jiraIssue)) {
 			JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
-			String jiraVersionId = getJiraVersionIdForRelease(userStory);
-			if (isJsonNull(userStory, "Parent")) {
-				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
-			} else {
-				String parentUserStoryFormattedID = userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString();
-				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, parentUserStoryFormattedID);
-				addParentFields(userStory, jiraParentIssue);
-				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
+			if (Utils.isNotEmpty(userStory)) {
+				String jiraVersionId = getJiraVersionIdForRelease(userStory);
+				if (isJsonNull(userStory, "Parent")) {
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
+				} else {
+					String parentUserStoryFormattedID = userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString();
+					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(project, parentUserStoryFormattedID);
+					addParentFields(userStory, jiraParentIssue);
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
+				}
 			}
 		}
 		return jiraIssue;
