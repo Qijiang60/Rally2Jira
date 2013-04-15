@@ -206,6 +206,8 @@ public class Utils {
 		r.setMaxLineLength(5000);
 		s = r.toString();
 		s = s.replace("\r\n", "\\n");
+		s = s.replace("\n", "\\n");
+		s = s.replace("\r", "\\n");
 		s = s.replace("\t", "\\t");
 		return s;
 	}

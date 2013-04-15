@@ -305,7 +305,7 @@ public class JiraRestOperations {
 	public void addUserToProjectRoles(String jiraProjectKey, String jiraUserName, String[] roles) throws Exception {
 		ClientResponse response = api.doGet("/rest/api/latest/project/" + jiraProjectKey + "/role");
 		jiraUserName = jiraUserName.trim();
-		int index = 20;
+		int index = 19;
 		JsonObject projectRoles = Utils.jerseyRepsonseToJsonObject(response);
 		ClientResponse userRoleResp = api.doGet(projectRoles.get("Users").getAsString().substring(index));
 		JsonObject oUsersRole = Utils.jerseyRepsonseToJsonObject(userRoleResp);

@@ -32,7 +32,7 @@ public class RallyToJiraSetup2 {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName(RallyToJiraSetup3.PROJECT).get(0).getAsJsonObject();
+		JsonObject project = rally.getProjectByName("Next Generation Web").get(0).getAsJsonObject();
 		String jiraProjectKey = Utils.getJiraProjectNameForRallyProject(project);
 		addUsersToProjectRole(jiraProjectKey);
 	}

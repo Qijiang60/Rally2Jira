@@ -66,7 +66,7 @@ public class RallyToJiraSetup3 {
 			// } catch (Exception e) {
 			//
 			// }
-			// deleteDuplicates(project);
+			//deleteDuplicates(project);
 			createReleases(project);
 
 		}
@@ -114,7 +114,7 @@ public class RallyToJiraSetup3 {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		createTasks(project);
+	//	createTasks(project);
 		createDefects(project);
 		createUserStories(project);
 
