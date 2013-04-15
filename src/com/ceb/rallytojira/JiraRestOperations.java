@@ -171,13 +171,17 @@ public class JiraRestOperations {
 		return null;
 	}
 
-	public void deleteAllIssues(JsonObject project) throws IOException {
+	public boolean deleteAllIssues(JsonObject project) throws IOException {
 		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectNameForRallyProject(project) + "&maxResults=200";
 		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
 		for (JsonElement issue : issues) {
 			String issueKey = issue.getAsJsonObject().get("key").getAsString();
 			api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
 		}
+		if(issues.size() ==200){
+			return true;
+		}
+		return false;
 
 	}
 
@@ -336,6 +340,25 @@ public class JiraRestOperations {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void deleteDuplicateIssue(String projectKey, String rallyFormattedId) {
+
+		String url = "/rest/api/latest/search?jql=Rally_FormattedID~" + rallyFormattedId;
+		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
+		boolean duplicate = false;
+		if (issues.size() > 1) {
+			for (JsonElement je : issues) {
+				String issueKey = je.getAsJsonObject().get("key").getAsString();
+				if (issueKey.startsWith(projectKey + "-")) {
+					if (duplicate) {
+						api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
+					}
+					duplicate = true;
+				}
+			}
+		}
+
 	}
 
 }

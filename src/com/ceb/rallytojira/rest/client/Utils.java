@@ -244,7 +244,7 @@ public class Utils {
 			for (String s : values) {
 				labelsWithoutSpaces.add(s.replace(" ", ""));
 			}
-			//labelsWithoutSpaces.add("Iconoculture");
+			// labelsWithoutSpaces.add("Iconoculture");
 			values = labelsWithoutSpaces;
 		}
 		if (jiraKey.equals("reporter.name")) {
@@ -430,5 +430,15 @@ public class Utils {
 			sb.append(s + "\n");
 		}
 		return sb.toString();
+	}
+
+	public static void reinitialize() {
+		jiraRallyUserMap = null;
+		userStatusMap = null;
+		elementMapping = new HashMap<String, Map<String, String>>();
+		workflowStatusMapping = null;
+		priorityMapping = null;
+		elementMap = new HashMap<String, List<String>>();
+
 	}
 }

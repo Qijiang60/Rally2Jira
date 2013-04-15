@@ -23,7 +23,7 @@ public class RallyToJiraSetup3 {
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
-	public static String PROJECT = "Technology Roadmap Builder";
+	public static String PROJECT = "Workspace";
 
 	public RallyToJiraSetup3() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -38,9 +38,72 @@ public class RallyToJiraSetup3 {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
-		// deleteAllIssuesInJira(project);
-		createReleases(project);
+		// JsonObject project =
+		// rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
+		// deleteDuplicates(project);
+		// createReleases(project);
+
+		/*
+		 * String[] projectNames = new String[] { "EXBD",
+		 * "LE Move to CWS Integrated Backend", "Search Services" };
+		 */
+		/*
+		 * String[] projectNames = new String[] { "CMS Project", "Discussions",
+		 * "Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
+		 * "NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
+		 * "Test Automation", "Test Automation - Web V2",
+		 * "Test Automation - Workspace", "Web Expansion", "Workspace" };
+		 */
+		String[] projectNames = new String[] { "Workspace" };
+		for (String projectName : projectNames) {
+			JsonObject project = rally.getProjectByName(projectName).get(0).getAsJsonObject();
+			Utils.reinitialize();
+			System.out.println(projectName + ", " + Utils.getJsonObjectName(project) + ", " + Utils.getJiraProjectNameForRallyProject(project));
+//			try {
+//				while (deleteAllIssuesInJira(project)) {
+//					System.out.println("deleting ...");
+//				}
+//			} catch (Exception e) {
+//
+//			}
+			// deleteDuplicates(project);
+			createReleases(project);
+
+		}
+
+	}
+
+	private void deleteDuplicates(JsonObject project) throws IOException {
+
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+		progress = 0;
+		int totalUserStories = userStories.size();
+		for (JsonElement jeUserStory : userStories) {
+			System.out.println("**USER STORY " + progress++ + " of " + totalUserStories + " *************************************");
+			JsonObject userStory = jeUserStory.getAsJsonObject();
+			deleteDuplicates(project, userStory.get("FormattedID").getAsString());
+		}
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+		progress = 0;
+		int totalDefects = defects.size();
+		for (JsonElement jeDefect : defects) {
+			System.out.println("**DEFECT " + progress++ + " of " + totalDefects + " *************************************");
+			JsonObject defect = jeDefect.getAsJsonObject();
+			deleteDuplicates(project, defect.get("FormattedID").getAsString());
+		}
+		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		progress = 0;
+		int totalTasks = tasks.size();
+		for (JsonElement jeTask : tasks) {
+			System.out.println("**TASK " + progress++ + " of " + totalTasks + " *************************************");
+			JsonObject task = jeTask.getAsJsonObject();
+			deleteDuplicates(project, task.get("FormattedID").getAsString());
+		}
+	}
+
+	private void deleteDuplicates(JsonObject project, String rallyFormattedId) throws IOException {
+		jira.deleteDuplicateIssue(Utils.getJiraProjectNameForRallyProject(project), rallyFormattedId);
+
 	}
 
 	private void createReleases(JsonObject project) throws Exception {
@@ -51,9 +114,9 @@ public class RallyToJiraSetup3 {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-		createUserStories(project);
-		createDefects(project);
 		createTasks(project);
+		createDefects(project);
+		createUserStories(project);
 
 	}
 
@@ -103,9 +166,8 @@ public class RallyToJiraSetup3 {
 	private void findOrCreateIssueInJiraForTask(JsonObject project, JsonObject task) throws Exception {
 		String rallyFormattedId = task.get("FormattedID").getAsString();
 		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(project), rallyFormattedId);
-		String jiraVersionId = getJiraVersionIdForRelease(task);
 		if (Utils.isEmpty(jiraIssue)) {
-
+			String jiraVersionId = getJiraVersionIdForRelease(task);
 			if (task.get("WorkProduct") == null || task.get("WorkProduct").isJsonNull()) {
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Task");
 			} else {
@@ -132,8 +194,8 @@ public class RallyToJiraSetup3 {
 
 	private JsonObject findOrCreateIssueInJiraForUserStory(JsonObject project, String userStoryFormattedID) throws Exception {
 		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(project), userStoryFormattedID);
-		JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
-		if (Utils.isNotEmpty(userStory)) {
+		if (Utils.isEmpty(jiraIssue)) {
+			JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
 			String jiraVersionId = getJiraVersionIdForRelease(userStory);
 			if (isJsonNull(userStory, "Parent")) {
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
@@ -319,8 +381,7 @@ public class RallyToJiraSetup3 {
 		return false;
 	}
 
-	private void deleteAllIssuesInJira(JsonObject project) throws IOException {
-		jira.deleteAllIssues(project);
-
+	private boolean deleteAllIssuesInJira(JsonObject project) throws IOException {
+		return jira.deleteAllIssues(project);
 	}
 }

@@ -56,6 +56,8 @@ public class JiraSoapOperations {
 				RemoteGroup group = getGroup(groupName);
 				soapy.removeUserFromGroup(token, group, user);
 			}
+			
 		}
+		
 	}
 }
