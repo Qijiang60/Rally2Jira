@@ -231,11 +231,16 @@ public class Utils {
 	}
 
 	public static String getJsonObjectName(JsonObject jo) {
-		return jo.get("Name").getAsString();
+		String name = jo.get("Name").getAsString();
+		if (name.equals("Support/Development")) {
+			return "Web Hierarchy Tool";
+		}
+		return name;
 	}
 
 	public static String getJiraProjectNameForRallyProject(JsonObject project) throws IOException {
-		return getElementMapping(RallyObject.PROJECT, getJsonObjectName(project)).get(getJsonObjectName(project));
+		String projectName = getJsonObjectName(project);
+		return getElementMapping(RallyObject.PROJECT, projectName).get(projectName);
 	}
 
 	@SuppressWarnings({ "rawtypes" })

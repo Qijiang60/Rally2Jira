@@ -23,7 +23,7 @@ public class RallyToJiraSetup1 {
 	int counter = 0;
 	int limit = 100000;
 	int progress = 0;
-	
+	String projectName = "Web Hierarchy Tool";
 
 	public RallyToJiraSetup1() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -38,18 +38,18 @@ public class RallyToJiraSetup1 {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName("Next Generation Web").get(0).getAsJsonObject();
+		JsonObject project = rally.getProjectByName("Support/Development").get(0).getAsJsonObject();
 		createRallyJiraUserMap(project);
 	}
 
 	private void createRallyJiraUserMap(JsonObject project) throws IOException {
 		Set<String> allUsers = getAllUsers(project);
 		System.out.println(allUsers.size());
-		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + Utils.getJsonObjectName(project).replaceAll(" ", "_")));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + projectName.replaceAll(" ", "_")));
 		bw.write("\nRally ObjectID\tRally DisplayName\tJira DisplayName\tRally UserName\tJira UserName\tDisabled\tMatch");
 		for (String rallyUserObjectID : allUsers) {
 			JsonObject rallyUser = rally.findRallyObjectByObjectID(project, RallyObject.USER, rallyUserObjectID);
-			if(Utils.isEmpty(rallyUser)){
+			if (Utils.isEmpty(rallyUser)) {
 				continue;
 			}
 			String rallyUserName = rallyUser.get("UserName").getAsString();

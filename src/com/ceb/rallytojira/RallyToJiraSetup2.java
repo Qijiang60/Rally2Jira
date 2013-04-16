@@ -18,7 +18,7 @@ public class RallyToJiraSetup2 {
 	int counter = 0;
 	int limit = 100000;
 	int progress = 0;
-	String projectName = "Site Catalyst";
+	String projectName = "Web Hierarchy Tool";
 
 	public RallyToJiraSetup2() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -33,8 +33,8 @@ public class RallyToJiraSetup2 {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName(projectName).get(0).getAsJsonObject();
-		String jiraProjectKey = Utils.getJiraProjectNameForRallyProject(project);
+		JsonObject project = rally.getProjectByName("Support/Development").get(0).getAsJsonObject();
+		String jiraProjectKey = "WHT";
 		addUsersToProjectRole(jiraProjectKey);
 	}
 

@@ -347,6 +347,7 @@ public class JiraRestOperations {
 		String url = "/rest/api/latest/search?jql=Rally_FormattedID~" + rallyFormattedId + "&maxResults=200";
 		boolean duplicate = false;
 		boolean loop = true;
+		String issueKeyToSave = "";
 		while (loop) {
 			JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
 
@@ -354,8 +355,10 @@ public class JiraRestOperations {
 				for (JsonElement je : issues) {
 					String issueKey = je.getAsJsonObject().get("key").getAsString();
 					if (issueKey.startsWith(projectKey + "-")) {
-						if (duplicate) {
+						if (duplicate && !issueKey.equals(issueKeyToSave)) {
 							api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
+						}else{
+							issueKeyToSave = issueKey;
 						}
 						duplicate = true;
 					}

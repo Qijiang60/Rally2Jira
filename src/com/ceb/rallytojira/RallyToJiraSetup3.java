@@ -42,19 +42,21 @@ public class RallyToJiraSetup3 {
 		// rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
 		// deleteDuplicates(project);
 		// createReleases(project);
-//
-//		String[] projectNames = new String[] { "EXBD",
-//				"LE Move to CWS Integrated Backend", "Search Services", "CMS Project", "Discussions",
-//				"Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
-//				"NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
-//				"Test Automation", "Test Automation - Web V2",
-//				"Test Automation - Workspace", "Web Expansion", "Workspace", "Next Generation Web" };
-		String[] projectNames = new String[] { 
-				"LE Move to CWS Integrated Backend", "Search Services", "CMS Project", "Discussions",
-				"Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
-				"NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
-				"Test Automation", "Test Automation - Web V2",
-				"Test Automation - Workspace", "Web Expansion", "Workspace", "Next Generation Web" };
+		//
+		// String[] projectNames = new String[] { "EXBD",
+		// "LE Move to CWS Integrated Backend", "Search Services",
+		// "CMS Project", "Discussions",
+		// "Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
+		// "NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
+		// "Test Automation", "Test Automation - Web V2",
+		// "Test Automation - Workspace", "Web Expansion", "Workspace",
+		// "Next Generation Web" };
+		// String[] projectNames = new String[] { "Site Catalyst",
+		// "Test Automation", "Test Automation - Web V2",
+		// "Test Automation - Workspace", "Web Expansion", "Workspace",
+		// "Next Generation Web" };
+
+		String[] projectNames = new String[] { "Support/Development" };
 		for (String projectName : projectNames) {
 			JsonObject project = rally.getProjectByName(projectName).get(0).getAsJsonObject();
 			Utils.reinitialize();
@@ -66,7 +68,7 @@ public class RallyToJiraSetup3 {
 			// } catch (Exception e) {
 			//
 			// }
-			deleteDuplicates(project);
+			//deleteDuplicates(project);
 			createReleases(project);
 
 		}

@@ -20,8 +20,10 @@ public class RallyJsonClient {
 	RallyRestApi api;
 
 	public RallyJsonClient() throws URISyntaxException {
+//		api = new RallyRestApi(new URI("https://rally1.rallydev.com"),
+//				"hagarwal@executiveboard.com", "harshag12");		
 		api = new RallyRestApi(new URI("https://rally1.rallydev.com"),
-				"hagarwal@executiveboard.com", "harshag12");
+						"hgarwal@executiveboard.com", "harshag12");
 		api.setWsapiVersion("1.41");
 		
 	}
