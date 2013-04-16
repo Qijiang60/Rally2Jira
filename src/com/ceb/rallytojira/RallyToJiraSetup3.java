@@ -23,7 +23,7 @@ public class RallyToJiraSetup3 {
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
-	public static String PROJECT = "Workspace";
+	public static String PROJECT = "Next Generation Web";
 
 	public RallyToJiraSetup3() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -42,19 +42,19 @@ public class RallyToJiraSetup3 {
 		// rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
 		// deleteDuplicates(project);
 		// createReleases(project);
-
-		/*
-		 * String[] projectNames = new String[] { "EXBD",
-		 * "LE Move to CWS Integrated Backend", "Search Services" };
-		 */
-		/*
-		 * String[] projectNames = new String[] { "CMS Project", "Discussions",
-		 * "Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
-		 * "NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
-		 * "Test Automation", "Test Automation - Web V2",
-		 * "Test Automation - Workspace", "Web Expansion", "Workspace" };
-		 */
-		String[] projectNames = new String[] { "Workspace" };
+//
+//		String[] projectNames = new String[] { "EXBD",
+//				"LE Move to CWS Integrated Backend", "Search Services", "CMS Project", "Discussions",
+//				"Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
+//				"NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
+//				"Test Automation", "Test Automation - Web V2",
+//				"Test Automation - Workspace", "Web Expansion", "Workspace", "Next Generation Web" };
+		String[] projectNames = new String[] { 
+				"LE Move to CWS Integrated Backend", "Search Services", "CMS Project", "Discussions",
+				"Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
+				"NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
+				"Test Automation", "Test Automation - Web V2",
+				"Test Automation - Workspace", "Web Expansion", "Workspace", "Next Generation Web" };
 		for (String projectName : projectNames) {
 			JsonObject project = rally.getProjectByName(projectName).get(0).getAsJsonObject();
 			Utils.reinitialize();
@@ -66,7 +66,7 @@ public class RallyToJiraSetup3 {
 			// } catch (Exception e) {
 			//
 			// }
-			//deleteDuplicates(project);
+			deleteDuplicates(project);
 			createReleases(project);
 
 		}
@@ -114,7 +114,7 @@ public class RallyToJiraSetup3 {
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
 
-	//	createTasks(project);
+		createTasks(project);
 		createDefects(project);
 		createUserStories(project);
 

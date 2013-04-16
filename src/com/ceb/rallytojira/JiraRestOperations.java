@@ -178,7 +178,7 @@ public class JiraRestOperations {
 			String issueKey = issue.getAsJsonObject().get("key").getAsString();
 			api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
 		}
-		if(issues.size() ==200){
+		if (issues.size() == 200) {
 			return true;
 		}
 		return false;
@@ -344,18 +344,25 @@ public class JiraRestOperations {
 
 	public void deleteDuplicateIssue(String projectKey, String rallyFormattedId) {
 
-		String url = "/rest/api/latest/search?jql=Rally_FormattedID~" + rallyFormattedId;
-		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
+		String url = "/rest/api/latest/search?jql=Rally_FormattedID~" + rallyFormattedId + "&maxResults=200";
 		boolean duplicate = false;
-		if (issues.size() > 1) {
-			for (JsonElement je : issues) {
-				String issueKey = je.getAsJsonObject().get("key").getAsString();
-				if (issueKey.startsWith(projectKey + "-")) {
-					if (duplicate) {
-						api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
+		boolean loop = true;
+		while (loop) {
+			JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
+
+			if (issues.size() > 1) {
+				for (JsonElement je : issues) {
+					String issueKey = je.getAsJsonObject().get("key").getAsString();
+					if (issueKey.startsWith(projectKey + "-")) {
+						if (duplicate) {
+							api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
+						}
+						duplicate = true;
 					}
-					duplicate = true;
 				}
+			}
+			if (issues.size() < 200) {
+				loop = false;
 			}
 		}
 

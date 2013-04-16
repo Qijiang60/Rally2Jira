@@ -18,6 +18,7 @@ public class RallyToJiraSetup2 {
 	int counter = 0;
 	int limit = 100000;
 	int progress = 0;
+	String projectName = "Site Catalyst";
 
 	public RallyToJiraSetup2() throws URISyntaxException {
 		rally = new RallyOperations();
@@ -32,7 +33,7 @@ public class RallyToJiraSetup2 {
 	}
 
 	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName("Next Generation Web").get(0).getAsJsonObject();
+		JsonObject project = rally.getProjectByName(projectName).get(0).getAsJsonObject();
 		String jiraProjectKey = Utils.getJiraProjectNameForRallyProject(project);
 		addUsersToProjectRole(jiraProjectKey);
 	}
@@ -41,7 +42,7 @@ public class RallyToJiraSetup2 {
 		jira.addUserToProjectRoles(jiraProjectKey, "rally_jira_migration", new String[] { "Developers", "Users" });
 		jira.addUserToProjectRoles(jiraProjectKey, "hagarwal", new String[] { "Developers", "Users" });
 		jira.addUserToProjectRoles(jiraProjectKey, "tberg", new String[] { "Developers", "Users" });
-		BufferedReader br = new BufferedReader(new FileReader("mappings/jira_rally_user_mapping_" + RallyToJiraSetup3.PROJECT.replaceAll(" ", "_")));
+		BufferedReader br = new BufferedReader(new FileReader("mappings/jira_rally_user_mapping_" + projectName.replaceAll(" ", "_")));
 		String line = br.readLine();
 		while (line != null) {
 			if (Utils.isNotEmpty(line)) {
