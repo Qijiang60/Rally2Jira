@@ -78,21 +78,21 @@ public class RallyToJiraSetup1 {
 		bw.close();
 	}
 
-	private Set<String> getAllUsers(JsonObject project) throws IOException {
+	private Set<String> getAllUsers(JsonObject workspace, JsonObject project) throws IOException {
 		Set<String> allUsers = new HashSet<String>();
-		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		JsonArray tasks = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.TASK);
 		for (JsonElement jeTask : tasks) {
 			addOwnerToSet(allUsers, jeTask, project);
 
 		}
 		tasks = null;
-		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+		JsonArray defects = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.DEFECT);
 		for (JsonElement jeDefect : defects) {
 			addOwnerToSet(allUsers, jeDefect, project);
 
 		}
 		defects = null;
-		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+		JsonArray userStories = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.USER_STORY);
 		for (JsonElement jeUserStory : userStories) {
 			addOwnerToSet(allUsers, jeUserStory, project);
 
