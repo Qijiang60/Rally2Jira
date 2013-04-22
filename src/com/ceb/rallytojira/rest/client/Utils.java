@@ -448,4 +448,30 @@ public class Utils {
 		elementMap = new HashMap<String, List<String>>();
 
 	}
+
+	public static Map<String, List<String>> getProjectMapping() throws IOException {
+		Map<String, List<String>> projectMapping = new HashMap<String, List<String>>();
+		FileReader fr = new FileReader("mappings/jira_rally_project_mapping");
+		BufferedReader br = new BufferedReader(fr);
+		String stringRead = br.readLine();
+		int i = 0;
+		while (stringRead != null) {
+			if (i > 0 && Utils.isNotEmpty(stringRead)) {
+				StringTokenizer st = new StringTokenizer(stringRead, ",");
+				String workspace = st.nextToken();
+				String rallyProjectName = st.nextToken();
+				String jiraProjectName = st.nextToken();
+				String jiraProjectKey = st.nextToken();
+				List<String> temp = new ArrayList<String>();
+				temp.add(jiraProjectName);
+				temp.add(jiraProjectKey);
+				projectMapping.put(workspace + "-" + rallyProjectName, temp);
+			}
+			i++;
+			stringRead = br.readLine();
+		}
+		br.close();
+		return projectMapping;
+
+	}
 }

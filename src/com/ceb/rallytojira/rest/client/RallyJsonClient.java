@@ -51,4 +51,9 @@ public class RallyJsonClient {
 		return queryResponse.getResults();
 
 	}
+
+	public RallyRestApi getApi() {
+		return api;
+	}
+	
 }

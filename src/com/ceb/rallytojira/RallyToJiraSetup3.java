@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
@@ -38,6 +39,28 @@ public class RallyToJiraSetup3 {
 	}
 
 	private void process() throws Exception {
+
+		Map<String, List<String>> projectMapping = Utils.getProjectMapping();
+		JsonArray workspaces = rally.getAllWorkspaces();
+
+		for (JsonElement workspaceEle : workspaces) {
+			JsonObject workspace = workspaceEle.getAsJsonObject();
+			JsonArray projects = workspace.get("Projects").getAsJsonArray();
+			for (JsonElement projEle : projects) {
+				JsonObject project = rally.getObjectFromRef(projEle);
+				String workspaceName = workspace.get("Name").getAsString();
+				String projectName = project.get("Name").getAsString();
+				String key = workspaceName + "-" + projectName;
+				if (projectMapping.containsKey(key)) {
+					createReleases(workspace, project);
+					createTasks(workspace, project);
+					createDefects(workspace, project);
+					createUserStories(workspace, project);
+				}
+				break;
+			}
+		}
+
 		// JsonObject project =
 		// rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
 		// deleteDuplicates(project);
@@ -56,28 +79,31 @@ public class RallyToJiraSetup3 {
 		// "Test Automation - Workspace", "Web Expansion", "Workspace",
 		// "Next Generation Web" };
 
-		String[] projectNames = new String[] { "Support/Development" };
-		for (String projectName : projectNames) {
-			JsonObject project = rally.getProjectByName(projectName).get(0).getAsJsonObject();
-			Utils.reinitialize();
-			System.out.println(projectName + ", " + Utils.getJsonObjectName(project) + ", " + Utils.getJiraProjectNameForRallyProject(project));
-			// try {
-			// while (deleteAllIssuesInJira(project)) {
-			// System.out.println("deleting ...");
-			// }
-			// } catch (Exception e) {
-			//
-			// }
-			//deleteDuplicates(project);
-			createReleases(project);
+		// String[] projectNames = new String[] { "Support/Development" };
+		// for (String projectName : projectNames) {
+		// JsonObject project =
+		// rally.getProjectByName(projectName).get(0).getAsJsonObject();
+		// Utils.reinitialize();
+		// System.out.println(projectName + ", " +
+		// Utils.getJsonObjectName(project) + ", " +
+		// Utils.getJiraProjectNameForRallyProject(project));
+		// try {
+		// while (deleteAllIssuesInJira(project)) {
+		// System.out.println("deleting ...");
+		// }
+		// } catch (Exception e) {
+		//
+		// }
+		// deleteDuplicates(project);
+		// createReleases(project);
 
-		}
+		// }
 
 	}
 
-	private void deleteDuplicates(JsonObject project) throws IOException {
+	private void deleteDuplicates(JsonObject workspace, JsonObject project) throws IOException {
 
-		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+		JsonArray userStories = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.USER_STORY);
 		progress = 0;
 		int totalUserStories = userStories.size();
 		for (JsonElement jeUserStory : userStories) {
@@ -85,7 +111,7 @@ public class RallyToJiraSetup3 {
 			JsonObject userStory = jeUserStory.getAsJsonObject();
 			deleteDuplicates(project, userStory.get("FormattedID").getAsString());
 		}
-		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+		JsonArray defects = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.DEFECT);
 		progress = 0;
 		int totalDefects = defects.size();
 		for (JsonElement jeDefect : defects) {
@@ -93,7 +119,7 @@ public class RallyToJiraSetup3 {
 			JsonObject defect = jeDefect.getAsJsonObject();
 			deleteDuplicates(project, defect.get("FormattedID").getAsString());
 		}
-		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		JsonArray tasks = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.TASK);
 		progress = 0;
 		int totalTasks = tasks.size();
 		for (JsonElement jeTask : tasks) {
@@ -108,36 +134,27 @@ public class RallyToJiraSetup3 {
 
 	}
 
-	private void createReleases(JsonObject project) throws Exception {
-		JsonArray releases = rally.getReleasesForProject(project);
-
+	private void createReleases(JsonObject workspace, JsonObject project) throws Exception {
+		JsonArray releases = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.RELEASE);
 		for (JsonElement release : releases) {
 			String jiraVersionId = jira.createVersion(project, release.getAsJsonObject());
 			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
 		}
-
-		createTasks(project);
-		createDefects(project);
-		createUserStories(project);
-
 	}
 
-	private void createTasks(JsonObject project) throws Exception {
-		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+	private void createTasks(JsonObject workspace, JsonObject project) throws Exception {
+		JsonArray tasks = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.TASK);
 		progress = 0;
 		int totalTasks = tasks.size();
 		for (JsonElement jeTask : tasks) {
 			System.out.println("**TASK " + progress++ + " of " + totalTasks + " *************************************");
 			JsonObject task = jeTask.getAsJsonObject();
 			findOrCreateIssueInJiraForTask(project, task);
-			// if (doBreak()) {
-			// break;
-			// }
 		}
 	}
 
-	private void createDefects(JsonObject project) throws Exception {
-		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+	private void createDefects(JsonObject workspace, JsonObject project) throws Exception {
+		JsonArray defects = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.DEFECT);
 		progress = 0;
 		int totalDefects = defects.size();
 		for (JsonElement jeDefect : defects) {
@@ -145,23 +162,17 @@ public class RallyToJiraSetup3 {
 
 			JsonObject defect = jeDefect.getAsJsonObject();
 			findOrCreateIssueInJiraForDefect(project, defect.get("FormattedID").getAsString());
-			// if (doBreak()) {
-			// break;
-			// }
 		}
 	}
 
-	private void createUserStories(JsonObject project) throws Exception {
-		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+	private void createUserStories(JsonObject workspace, JsonObject project) throws Exception {
+		JsonArray userStories = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.USER_STORY);
 		progress = 0;
 		int totalUserStories = userStories.size();
 		for (JsonElement jeUserStory : userStories) {
 			System.out.println("**USER STORY " + progress++ + " of " + totalUserStories + " *************************************");
 			JsonObject userStory = jeUserStory.getAsJsonObject();
 			findOrCreateIssueInJiraForUserStory(project, userStory.get("FormattedID").getAsString());
-			// if (doBreak()) {
-			// break;
-			// }
 		}
 	}
 
@@ -373,16 +384,6 @@ public class RallyToJiraSetup3 {
 			return releaseVersionMap.get(rallyObject.get("Release").getAsJsonObject().get("ObjectID").getAsString());
 		}
 		return null;
-	}
-
-	private boolean doBreak() {
-		counter++;
-		if (counter > limit) {
-			System.out.println(counter);
-			counter = 0;
-			return true;
-		}
-		return false;
 	}
 
 	private boolean deleteAllIssuesInJira(JsonObject project) throws IOException {
