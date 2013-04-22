@@ -180,7 +180,7 @@ public class RallyToJiraSetup3 {
 		if (Utils.isEmpty(jiraIssue)) {
 			String jiraVersionId = getJiraVersionIdForRelease(task);
 			if (task.get("WorkProduct") == null || task.get("WorkProduct").isJsonNull()) {
-				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Task");
+				jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, task, RallyObject.TASK, "Task");
 			} else {
 				JsonObject rallyTaskWorkProduct = task.get("WorkProduct").getAsJsonObject();
 				String workProductType = rallyTaskWorkProduct.get("_type").getAsString();
@@ -188,14 +188,14 @@ public class RallyToJiraSetup3 {
 				if (workProductType.equalsIgnoreCase("hierarchicalrequirement")) {
 					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(workspace, project, workProductFormattedID);
 					addParentFields(task, jiraParentIssue);
-					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 				} else {
 					if (workProductType.equalsIgnoreCase("defect")) {
 						JsonObject jiraParentIssue = findOrCreateIssueInJiraForDefect(workspace, project, workProductFormattedID);
 						addParentFields(task, jiraParentIssue);
-						jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
+						jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 					} else {
-						jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, task, RallyObject.TASK, "Task");
+						jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, task, RallyObject.TASK, "Task");
 					}
 
 				}
@@ -210,12 +210,12 @@ public class RallyToJiraSetup3 {
 			if (Utils.isNotEmpty(userStory)) {
 				String jiraVersionId = getJiraVersionIdForRelease(userStory);
 				if (isJsonNull(userStory, "Parent")) {
-					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
 				} else {
 					String parentUserStoryFormattedID = userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString();
 					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(workspace, project, parentUserStoryFormattedID);
 					addParentFields(userStory, jiraParentIssue);
-					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
 				}
 			}
 		}
@@ -229,24 +229,25 @@ public class RallyToJiraSetup3 {
 			JsonObject defect = rally.findRallyObjectByFormatteID(project, defectFormattedID, RallyObject.DEFECT);
 			String jiraVersionId = getJiraVersionIdForRelease(defect);
 			if (isJsonNull(defect, "Requirement")) {
-				jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
+				jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
 			} else {
 				String parentDefectFormattedID = defect.get("Requirement").getAsJsonObject().get("FormattedID").getAsString();
 				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(workspace, project, parentDefectFormattedID);
 				if (Utils.isNotEmpty(jiraParentIssue)) {
 					addParentFields(defect, jiraParentIssue);
-					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
 				} else {
-					jiraIssue = createIssueInJiraAndProcessSpecialItems(project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
+					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
 				}
 			}
 		}
 		return jiraIssue;
 	}
 
-	private JsonObject createIssueInJiraAndProcessSpecialItems(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType)
+	private JsonObject createIssueInJiraAndProcessSpecialItems(JsonObject workspace, JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType,
+			String jiraIssueType)
 			throws Exception {
-		JsonObject jiraIssue = jira.createIssueInJira(project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
+		JsonObject jiraIssue = jira.createIssueInJira(workspace, project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
 		processAttachments(project, rallyWorkProduct, jiraIssue);
 		processNotes(project, rallyWorkProduct, jiraIssue);
 		processWorkLog(project, rallyWorkProduct, jiraIssue);
@@ -384,7 +385,7 @@ public class RallyToJiraSetup3 {
 		return null;
 	}
 
-	private boolean deleteAllIssuesInJira(JsonObject project) throws IOException {
-		return jira.deleteAllIssues(project);
+	private boolean deleteAllIssuesInJira(JsonObject workspace, JsonObject project) throws IOException {
+		return jira.deleteAllIssues(workspace, project);
 	}
 }

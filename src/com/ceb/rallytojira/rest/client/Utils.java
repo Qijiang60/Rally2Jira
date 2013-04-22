@@ -37,6 +37,7 @@ public class Utils {
 	private static Map<String, String> priorityMapping;
 	private static Map<String, List<String>> elementMap = new HashMap<String, List<String>>();
 	private static Map<String, List<String>> projectMapping = new HashMap<String, List<String>>();
+
 	public static boolean isEmpty(String s) {
 		return s == null || s.length() == 0 || s.equalsIgnoreCase("null") || s.replace(" ", "").length() == 0;
 	}
@@ -231,7 +232,11 @@ public class Utils {
 	}
 
 	public static String getJsonObjectName(JsonObject jo) {
-		String name = jo.get("Name").getAsString();
+		JsonElement nameEle = jo.get("Name");
+		if (Utils.isEmpty(nameEle)) {
+			nameEle = jo.get("_refObjectName");
+		}
+		String name = nameEle.getAsString();
 		return name;
 	}
 

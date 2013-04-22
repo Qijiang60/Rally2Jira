@@ -72,7 +72,7 @@ public class JiraRestOperations {
 		return null;
 	}
 
-	public JsonArray findProjectVersions(JsonObject workspace,JsonObject project) throws IOException {
+	public JsonArray findProjectVersions(JsonObject workspace, JsonObject project) throws IOException {
 		ClientResponse response = api.doGet("/rest/api/latest/project/"
 				+ Utils.getJiraProjectNameForRallyProject(workspace, project)
 				+ "/versions");
@@ -86,8 +86,9 @@ public class JiraRestOperations {
 
 	}
 
-	public JsonObject createIssueInJira(JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType) throws Exception {
-		Map<String, Object> postData = getIssueCreateMap(project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
+	public JsonObject createIssueInJira(JsonObject workspace, JsonObject project, String jiraVersionId, JsonObject rallyWorkProduct, RallyObject workProductType, String jiraIssueType)
+			throws Exception {
+		Map<String, Object> postData = getIssueCreateMap(workspace, project, jiraVersionId, rallyWorkProduct, workProductType, jiraIssueType);
 		Utils.printJson(postData);
 		ClientResponse response = api.doPost("/rest/api/latest/issue", Utils.mapToJsonString(postData));
 		return processJiraResponse(response);
@@ -103,14 +104,15 @@ public class JiraRestOperations {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Map<String, Object> getIssueCreateMap(JsonObject project, String versionId, JsonObject rallyIssue, RallyObject workProductType, String jiraIssueType) throws IOException {
+	private Map<String, Object> getIssueCreateMap(JsonObject workspace, JsonObject project, String versionId, JsonObject rallyIssue, RallyObject workProductType, String jiraIssueType)
+			throws IOException {
 		String projectName = Utils.getJsonObjectName(project);
 		Map<String, String> mapping = Utils.getElementMapping(workProductType, projectName);
 		Map<String, Object> postData = new LinkedHashMap<String, Object>();
 		Map<String, Object> issueData = new LinkedHashMap<String, Object>();
 
 		Map projectKey = new HashMap();
-		projectKey.put("key", Utils.getJiraProjectNameForRallyProject(project));
+		projectKey.put("key", Utils.getJiraProjectNameForRallyProject(workspace, project));
 		issueData.put("project", projectKey);
 
 		Map issuetype = new HashMap();
@@ -171,8 +173,8 @@ public class JiraRestOperations {
 		return null;
 	}
 
-	public boolean deleteAllIssues(JsonObject project) throws IOException {
-		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectNameForRallyProject(project) + "&maxResults=200";
+	public boolean deleteAllIssues(JsonObject workspace, JsonObject project) throws IOException {
+		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectNameForRallyProject(workspace, project) + "&maxResults=200";
 		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
 		for (JsonElement issue : issues) {
 			String issueKey = issue.getAsJsonObject().get("key").getAsString();
@@ -357,7 +359,7 @@ public class JiraRestOperations {
 					if (issueKey.startsWith(projectKey + "-")) {
 						if (duplicate && !issueKey.equals(issueKeyToSave)) {
 							api.doDelete("/rest/api/2/issue/" + issueKey + "?deleteSubtasks=true");
-						}else{
+						} else {
 							issueKeyToSave = issueKey;
 						}
 						duplicate = true;
