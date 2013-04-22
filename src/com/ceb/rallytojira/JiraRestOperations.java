@@ -34,14 +34,14 @@ public class JiraRestOperations {
 	}
 
 	@SuppressWarnings("unchecked")
-	public String createVersion(JsonObject project, JsonObject release)
+	public String createVersion(JsonObject workspace, JsonObject project, JsonObject release)
 			throws IOException {
 		String projectName = Utils.getJsonObjectName(project);
-		String versionId = findProjectVersionByName(project, Utils.getJsonObjectName(release));
+		String versionId = findProjectVersionByName(workspace, project, Utils.getJsonObjectName(release));
 		if (Utils.isEmpty(versionId)) {
 			Map<String, String> mapping = Utils.getElementMapping(RallyObject.RELEASE, projectName);
 			Map<String, Object> data = new LinkedHashMap<String, Object>();
-			data.put("project", Utils.getJiraProjectNameForRallyProject(project));
+			data.put("project", Utils.getJiraProjectNameForRallyProject(workspace, project));
 
 			for (String key : mapping.keySet()) {
 				Map m = Utils.getJiraValue(key, mapping.get(key), release, project);
@@ -60,9 +60,9 @@ public class JiraRestOperations {
 
 	}
 
-	public String findProjectVersionByName(JsonObject project,
+	public String findProjectVersionByName(JsonObject workspace, JsonObject project,
 			String versionName) throws IOException {
-		JsonArray projectVersions = findProjectVersions(project);
+		JsonArray projectVersions = findProjectVersions(workspace, project);
 		for (JsonElement version : projectVersions) {
 			if (version.getAsJsonObject().get("name").getAsString()
 					.equals(versionName.replaceAll("  ", " "))) {
@@ -72,9 +72,9 @@ public class JiraRestOperations {
 		return null;
 	}
 
-	public JsonArray findProjectVersions(JsonObject project) throws IOException {
+	public JsonArray findProjectVersions(JsonObject workspace,JsonObject project) throws IOException {
 		ClientResponse response = api.doGet("/rest/api/latest/project/"
-				+ Utils.getJiraProjectNameForRallyProject(project)
+				+ Utils.getJiraProjectNameForRallyProject(workspace, project)
 				+ "/versions");
 		JsonArray versions = Utils.jerseyRepsonseToJsonArray(response);
 		return versions;

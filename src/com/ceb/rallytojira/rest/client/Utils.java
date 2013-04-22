@@ -36,7 +36,7 @@ public class Utils {
 	private static Map<String, String> workflowStatusMapping;
 	private static Map<String, String> priorityMapping;
 	private static Map<String, List<String>> elementMap = new HashMap<String, List<String>>();
-
+	private static Map<String, List<String>> projectMapping = new HashMap<String, List<String>>();
 	public static boolean isEmpty(String s) {
 		return s == null || s.length() == 0 || s.equalsIgnoreCase("null") || s.replace(" ", "").length() == 0;
 	}
@@ -232,15 +232,19 @@ public class Utils {
 
 	public static String getJsonObjectName(JsonObject jo) {
 		String name = jo.get("Name").getAsString();
-		if (name.equals("Support/Development")) {
-			return "Web Hierarchy Tool";
-		}
 		return name;
 	}
 
-	public static String getJiraProjectNameForRallyProject(JsonObject project) throws IOException {
+	public static String getJiraProjectNameForRallyProject(JsonObject workspace, JsonObject project) throws IOException {
 		String projectName = getJsonObjectName(project);
-		return getElementMapping(RallyObject.PROJECT, projectName).get(projectName);
+		return projectMapping.get(getKeyForWorkspaceAndProject(workspace, project)).get(1);
+	}
+
+	public static String getKeyForWorkspaceAndProject(JsonObject workspace, JsonObject project) {
+		String workspaceName = workspace.get("Name").getAsString();
+		String projectName = project.get("Name").getAsString();
+		String key = workspaceName + "-" + projectName;
+		return key;
 	}
 
 	@SuppressWarnings({ "rawtypes" })
@@ -450,7 +454,7 @@ public class Utils {
 	}
 
 	public static Map<String, List<String>> getProjectMapping() throws IOException {
-		Map<String, List<String>> projectMapping = new HashMap<String, List<String>>();
+
 		FileReader fr = new FileReader("mappings/jira_rally_project_mapping");
 		BufferedReader br = new BufferedReader(fr);
 		String stringRead = br.readLine();
