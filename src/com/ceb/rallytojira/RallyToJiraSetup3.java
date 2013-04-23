@@ -65,9 +65,9 @@ public class RallyToJiraSetup3 {
 						}
 					}
 					createReleases(workspace, project);
-//					createTasks(workspace, project);
-//					createDefects(workspace, project);
-//					createUserStories(workspace, project);
+					createTasks(workspace, project);
+					createDefects(workspace, project);
+					createUserStories(workspace, project);
 				}
 			}
 		}
