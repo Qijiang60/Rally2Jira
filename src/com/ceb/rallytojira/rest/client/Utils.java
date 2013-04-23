@@ -257,7 +257,7 @@ public class Utils {
 			for (String s : values) {
 				labelsWithoutSpaces.add(s.replace(" ", ""));
 			}
-			// labelsWithoutSpaces.add("Iconoculture");
+			labelsWithoutSpaces.add(Utils.getJsonObjectName(project).replace(" ", ""));
 			values = labelsWithoutSpaces;
 		}
 		if (jiraKey.equals("reporter.name")) {
@@ -334,7 +334,7 @@ public class Utils {
 	private static void createJiraRallyUserMap(String jiraKey) throws FileNotFoundException, IOException {
 		jiraRallyUserMap = new TreeMap<String, String>();
 		userStatusMap = new TreeMap<String, Boolean>();
-		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" +jiraKey);
+		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" + jiraKey);
 		BufferedReader br = new BufferedReader(fr);
 		String stringRead = br.readLine();
 		int i = 0;
@@ -469,10 +469,12 @@ public class Utils {
 				String jiraProjectName = st.nextToken();
 				String jiraProjectKey = st.nextToken();
 				String releases = st.nextToken();
+				String userSetupCompleted = st.nextToken();
 				List<String> temp = new ArrayList<String>();
 				temp.add(jiraProjectName);
 				temp.add(jiraProjectKey);
 				temp.add(releases);
+				temp.add(userSetupCompleted);
 				projectMapping.put(workspace + "-" + rallyProjectName, temp);
 			}
 			i++;

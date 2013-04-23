@@ -1,14 +1,14 @@
-Workspace,Rally Project Name,Jira Project Name,Jira Project Key,Releases
-Accelerate,Development,Accelerate,ACLR,All
-//CEB Valtera,Survey Workstream,CEB Valtera,CVAL,All
-//CEB Valtera,Phase 1 Portal and Set-up,CEB Valtera,CVAL,Release 12|Enhancements
-//Departure View,Data Integration,Departure View,DEPV,All
-//Departure View,Departure View,Departure View,DEPV,All
-//DIA,Development,DIA,DIA,All
-//Launch Portal,Launch Portal,Launch Portal,LPOR,All
-//Online Implementation Workbook,Online Implementation Workbook,Online Implementation Workbook,OIWB,All
-//Premium Reporting,Development,Premium Reporting,PREP,All
-//PRO,Development,PRO,PRO,All
-//PRO,Forward Planning,PRO,PRO,All
-//RED,3.0+,RED,RED,All
-//Unified Benchmarking Platform,Unified Benchmarking Platform,Unified Benchmarking Platform,UBP,All
+Workspace,Rally Project Name,Jira Project Name,Jira Project Key,Releases,User
+Accelerate,Development,Accelerate,ACLR,All,Y
+CEB Valtera,Survey Workstream,CEB Valtera,CVAL,All,Y
+CEB Valtera,Phase 1 Portal and Set-up,CEB Valtera,CVAL,Release 12|Enhancements,Y
+Departure View,Data Integration,Departure View,DEPV,All,Y
+Departure View,Departure View,Departure View,DEPV,All,Y
+DIA,Development,DIA,DIA,All,Y
+Launch Portal,Launch Portal,Launch Portal,LPOR,All,Y
+Online Implementation Workbook,Online Implementation Workbook,Online Implementation Workbook,OIWB,All,Y
+Premium Reporting,Development,Premium Reporting,PREP,All,Y
+PRO,Development,PRO,PRO,All,Y
+PRO,Forward Planning,PRO,PRO,All,Y
+RED,3.0+,RED,RED,All,Y
+Unified Benchmarking Platform,Unified Benchmarking Platform,Unified Benchmarking Platform,UBP,All,Y

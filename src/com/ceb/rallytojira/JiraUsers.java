@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -13,14 +18,15 @@ import org.swift.common.soap.jira.RemoteValidationException;
 import com.ceb.rallytojira.rest.client.Utils;
 
 public class JiraUsers {
+	static String ext = "jira_rally_user_mapping_";
+	static String FILE_DIR = "mappings";
+	static GenericExtFilter filter = new GenericExtFilter(ext);
+	static Map<String, List<String>> allUserMap;
 
 	public static void main(String[] args) throws Exception {
 
 		Set<String> activeUsers = new TreeSet<String>();
 		Set<String> inActiveUsers = new TreeSet<String>();
-		String ext = "jira_rally_user_mapping_";
-		String FILE_DIR = "mappings";
-		GenericExtFilter filter = new GenericExtFilter(ext);
 
 		File dir = new File(FILE_DIR);
 
@@ -84,6 +90,45 @@ public class JiraUsers {
 
 	}
 
+	public static Map<String, List<String>> getAllUsersMap() throws IOException {
+		if (allUserMap == null) {
+			allUserMap = new HashMap<String, List<String>>();
+			File dir = new File(FILE_DIR);
+			File[] list = dir.listFiles(filter);
+			for (File file : list) {
+				BufferedReader br = new BufferedReader(new FileReader(file));
+				String line = br.readLine();
+				while (line != null) {
+					if (Utils.isNotEmpty(line)) {
+						line = line.replaceAll("\\t", " | ");
+						StringTokenizer st = new StringTokenizer(line, "|");
+						String rallyObjectId = st.nextToken().trim();
+						String rallyDisplayName = st.nextToken().trim();
+						String jiraDisplayName = st.nextToken().trim();
+						String rallyUserName = st.nextToken().trim();
+						String jiraUserName = st.nextToken().trim();
+						String disable = st.nextToken().trim();
+						String match = st.nextToken().trim();
+						if (!allUserMap.containsKey(rallyObjectId)) {
+							List<String> temp = new ArrayList<String>();
+							temp.add(rallyDisplayName);
+							temp.add(jiraDisplayName);
+							temp.add(rallyUserName);
+							temp.add(jiraUserName);
+							temp.add(disable);
+							temp.add(match);
+							allUserMap.put(rallyObjectId, temp);
+						}
+					}
+					line = br.readLine();
+				}
+				br.close();
+			}
+		}
+		return allUserMap;
+
+	}
+
 	public static void addUserToGroup(String username, String group) throws Exception {
 		System.out.println("addUserToGroup: " + username + ", " + group);
 		JiraSoapOperations jira = new JiraSoapOperations();
@@ -96,7 +141,7 @@ public class JiraUsers {
 				ex.printStackTrace();
 			}
 		}
-		
+
 	}
 
 	public static void removeUserFromGroup(String username, String group) throws Exception {

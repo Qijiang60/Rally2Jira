@@ -7,10 +7,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -25,63 +26,65 @@ public class RallyToJiraSetup1 {
 			return true;
 		}
 		boolean success = true;
-		Set<String> allUsers = getAllUsers(project, rally);
+		Set<JsonObject> allUsers = getAllUsers(project, rally);
 		System.out.println(allUsers.size());
+		Map<String, List<String>> allUsersMap = JiraUsers.getAllUsersMap();
 
-		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
+		BufferedWriter bw = new BufferedWriter(new FileWriter(f, true));
 		bw.write("\nRally ObjectID\tRally DisplayName\tJira DisplayName\tRally UserName\tJira UserName\tDisabled\tMatch");
-		for (String rallyUserObjectID : allUsers) {
-			JsonObject rallyUser = rally.findRallyObjectByObjectID(project, RallyObject.USER, rallyUserObjectID);
+		for (JsonObject rallyUserObject : allUsers) {
+			JsonObject rallyUser = rally.getObjectFromRef(rallyUserObject);
 			if (Utils.isEmpty(rallyUser)) {
 				continue;
 			}
-			String rallyUserName = rallyUser.get("UserName").getAsString();
-			String rallyLastname = isNotJsonNull(rallyUser, "LastName") ? rallyUser.get("LastName").getAsString() : "";
-			String rallyFirstname = isNotJsonNull(rallyUser, "FirstName") ? rallyUser.get("FirstName").getAsString() : "";
-			String jiraSearch = rallyLastname + ", " + rallyFirstname;
-			try {
-				JsonObject jiraUser = jira.findJiraUser(jiraSearch);
-				String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
-				String jiraUserName = jiraUser.get("name").getAsString();
-				if (jiraSearch.equals(jiraDisplayName)) {
-					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
-							+ "\tY");
-				} else {
-					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
-							+ "\tN");
+			String rallyUserObjectID = rallyUser.get("ObjectID").getAsString();
+			if (allUsersMap.containsKey(rallyUserObjectID)) {
+				String jiraSearch = allUsersMap.get(rallyUserObjectID).get(0);
+				String jiraDisplayName = allUsersMap.get(rallyUserObjectID).get(1);
+				String rallyUserName = allUsersMap.get(rallyUserObjectID).get(2);
+				String jiraUserName = allUsersMap.get(rallyUserObjectID).get(3);
+				String disabled = allUsersMap.get(rallyUserObjectID).get(4);
+				String match = allUsersMap.get(rallyUserObjectID).get(5);
+				bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + disabled
+						+ "\t" + match);
+			} else {
+				String rallyUserName = rallyUser.get("UserName").getAsString();
+				String rallyLastname = isNotJsonNull(rallyUser, "LastName") ? rallyUser.get("LastName").getAsString() : "";
+				String rallyFirstname = isNotJsonNull(rallyUser, "FirstName") ? rallyUser.get("FirstName").getAsString() : "";
+				String jiraSearch = rallyLastname + ", " + rallyFirstname;
+				try {
+					JsonObject jiraUser = jira.findJiraUser(jiraSearch);
+					String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
+					String jiraUserName = jiraUser.get("name").getAsString();
+					if (jiraSearch.equals(jiraDisplayName)) {
+						bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
+								+ "\tY");
+					} else {
+						bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
+								+ "\tN");
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t"
+							+ rallyUser.get("Disabled").getAsString() + "\tN");
+					success = false;
 				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t"
-						+ rallyUser.get("Disabled").getAsString() + "\tN");
-				success = false;
+				bw.flush();
 			}
-			bw.flush();
 
 		}
 		bw.close();
 		return success;
 	}
 
-	private static Set<String> getAllUsers(JsonObject project, RallyOperations rally) throws IOException {
-		Set<String> allUsers = new HashSet<String>();
-		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
-		for (JsonElement jeTask : tasks) {
-			addOwnerToSet(allUsers, jeTask, project);
-
+	private static Set<JsonObject> getAllUsers(JsonObject project, RallyOperations rally) throws IOException {
+		JsonObject proj = rally.getObjectFromRef(project);
+		JsonArray teamMembers = proj.get("TeamMembers").getAsJsonArray();
+		Set<JsonObject> allUsers = new HashSet<JsonObject>();
+		for (JsonElement teamMember : teamMembers) {
+			allUsers.add(teamMember.getAsJsonObject());
 		}
-		tasks = null;
-		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
-		for (JsonElement jeDefect : defects) {
-			addOwnerToSet(allUsers, jeDefect, project);
 
-		}
-		defects = null;
-		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
-		for (JsonElement jeUserStory : userStories) {
-			addOwnerToSet(allUsers, jeUserStory, project);
-
-		}
 		return allUsers;
 	}
 
@@ -108,7 +111,7 @@ public class RallyToJiraSetup1 {
 		}
 		return false;
 	}
-	
+
 	public static void addUsersToProjectRole(String jiraProjectKey) throws Exception {
 		JiraRestOperations jira = new JiraRestOperations();
 		jira.addUserToProjectRoles(jiraProjectKey, "rally_jira_migration", new String[] { "Developers", "Users" });
@@ -136,6 +139,5 @@ public class RallyToJiraSetup1 {
 		}
 		br.close();
 	}
-
 
 }

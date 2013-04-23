@@ -47,7 +47,6 @@ public class RallyToJiraSetup3 {
 
 		for (JsonElement workspaceEle : workspaces) {
 			JsonObject workspace = workspaceEle.getAsJsonObject();
-			String workspaceName = Utils.getJsonObjectName(workspace);
 			JsonArray projects = workspace.get("Projects").getAsJsonArray();
 			for (JsonElement projEle : projects) {
 				JsonObject project = rally.getObjectFromRef(projEle);
@@ -56,7 +55,7 @@ public class RallyToJiraSetup3 {
 					System.out.println(key);
 					rally.updateDefaultWorkspace(workspace, project);
 					createProject(workspace, project);
-					if (false) {
+					if (projectMapping.get(key).get(3).equals("N")) {
 						boolean success = RallyToJiraSetup1.createRallyJiraUserMap(workspace, project, rally, jira);
 						if (success) {
 							RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace, project));
@@ -66,13 +65,11 @@ public class RallyToJiraSetup3 {
 						}
 					}
 					createReleases(workspace, project);
-					createTasks(workspace, project);
-					createDefects(workspace, project);
-					createUserStories(workspace, project);
+//					createTasks(workspace, project);
+//					createDefects(workspace, project);
+//					createUserStories(workspace, project);
 				}
-				break;
 			}
-			break;
 		}
 	}
 
