@@ -194,6 +194,9 @@ public class RallyToJiraSetup3 {
 		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectKeyForRallyProject(workspace, project), rallyFormattedId);
 		if (Utils.isEmpty(jiraIssue)) {
 			String jiraVersionId = getJiraVersionIdForRelease(task);
+			if ("DO_NOT_MIGRATE".equals(jiraVersionId)) {
+				return;
+			}
 			if (task.get("WorkProduct") == null || task.get("WorkProduct").isJsonNull()) {
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, task, RallyObject.TASK, "Task");
 			} else {
@@ -226,6 +229,9 @@ public class RallyToJiraSetup3 {
 			JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
 			if (Utils.isNotEmpty(userStory)) {
 				String jiraVersionId = getJiraVersionIdForRelease(userStory);
+				if ("DO_NOT_MIGRATE".equals(jiraVersionId)) {
+					return null;
+				}
 				if (isJsonNull(userStory, "Parent")) {
 					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, userStory, RallyObject.USER_STORY, "Story");
 				} else {
@@ -246,6 +252,9 @@ public class RallyToJiraSetup3 {
 		if (Utils.isEmpty(jiraIssue)) {
 			JsonObject defect = rally.findRallyObjectByFormatteID(project, defectFormattedID, RallyObject.DEFECT);
 			String jiraVersionId = getJiraVersionIdForRelease(defect);
+			if ("DO_NOT_MIGRATE".equals(jiraVersionId)) {
+				return null;
+			}
 			if (isJsonNull(defect, "Requirement")) {
 				jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, defect, RallyObject.DEFECT, "Bug");
 			} else {
@@ -401,7 +410,11 @@ public class RallyToJiraSetup3 {
 
 	private String getJiraVersionIdForRelease(JsonObject rallyObject) {
 		if (rallyObject.get("Release") != null && !rallyObject.get("Release").isJsonNull()) {
-			return releaseVersionMap.get(rallyObject.get("Release").getAsJsonObject().get("_ref").getAsString());
+			String release = releaseVersionMap.get(rallyObject.get("Release").getAsJsonObject().get("_ref").getAsString());
+			if (Utils.isEmpty(release)) {
+				return "DO_NOT_MIGRATE";
+			}
+			return release;
 		}
 		return null;
 	}
