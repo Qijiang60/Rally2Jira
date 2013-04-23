@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class Utils {
 	private static Map<String, String> workflowStatusMapping;
 	private static Map<String, String> priorityMapping;
 	private static Map<String, List<String>> elementMap = new HashMap<String, List<String>>();
-	private static Map<String, List<String>> projectMapping = new HashMap<String, List<String>>();
+	private static Map<String, List<String>> projectMapping = new LinkedHashMap<String, List<String>>();
 
 	public static boolean isEmpty(String s) {
 		return s == null || s.length() == 0 || s.equalsIgnoreCase("null") || s.replace(" ", "").length() == 0;
@@ -83,12 +84,12 @@ public class Utils {
 		}
 	}
 
-	public static List<String> elementsTobeFetched(String project, RallyObject artifactType) throws IOException {
+	public static List<String> elementsTobeFetched(RallyObject artifactType) throws IOException {
 		List<String> elements = elementMap.get(artifactType.getCode());
 		if (elements == null) {
 			elements = new ArrayList<String>();
 			elementMap.put(artifactType.getCode(), elements);
-			FileReader fr = getFileReader(project, artifactType.getCode());
+			FileReader fr = getFileReader(artifactType.getCode());
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 
@@ -110,20 +111,17 @@ public class Utils {
 
 	}
 
-	private static FileReader getFileReader(String project, String artifactType) throws FileNotFoundException {
-		File f = new File("mappings/" + project + "/" + artifactType);
-		if (!f.exists()) {
-			f = new File("mappings/Common/" + artifactType);
-		}
+	private static FileReader getFileReader(String artifactType) throws FileNotFoundException {
+		File f = new File("mappings/Common/" + artifactType);
 		return new FileReader(f);
 	}
 
-	public static Map<String, String> getElementMapping(RallyObject artifactType, String project) throws IOException {
+	public static Map<String, String> getElementMapping(RallyObject artifactType) throws IOException {
 		Map<String, String> artifactMap = elementMapping.get(artifactType.getCode());
 		if (artifactMap == null) {
 			artifactMap = new HashMap<String, String>();
 			elementMapping.put(artifactType.getCode(), artifactMap);
-			FileReader fr = getFileReader(project, artifactType.getCode());
+			FileReader fr = getFileReader(artifactType.getCode());
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
@@ -144,10 +142,10 @@ public class Utils {
 		return artifactMap;
 	}
 
-	public static Map<String, String> getWorkflowStatusMapping(String project) throws IOException {
+	public static Map<String, String> getWorkflowStatusMapping() throws IOException {
 		if (workflowStatusMapping == null) {
 			workflowStatusMapping = new HashMap<String, String>();
-			FileReader fr = getFileReader(project, "workflow_status_mapping");
+			FileReader fr = getFileReader("workflow_status_mapping");
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
@@ -168,10 +166,10 @@ public class Utils {
 		return workflowStatusMapping;
 	}
 
-	public static Map<String, String> getPriorityMapping(String project) throws IOException {
+	public static Map<String, String> getPriorityMapping() throws IOException {
 		if (priorityMapping == null) {
 			priorityMapping = new HashMap<String, String>();
-			FileReader fr = getFileReader(project, "priorities_mapping");
+			FileReader fr = getFileReader("priorities_mapping");
 			BufferedReader br = new BufferedReader(fr);
 			String stringRead = br.readLine();
 			int i = 0;
@@ -240,8 +238,7 @@ public class Utils {
 		return name;
 	}
 
-	public static String getJiraProjectNameForRallyProject(JsonObject workspace, JsonObject project) throws IOException {
-		String projectName = getJsonObjectName(project);
+	public static String getJiraProjectKeyForRallyProject(JsonObject workspace, JsonObject project) throws IOException {
 		return projectMapping.get(getKeyForWorkspaceAndProject(workspace, project)).get(1);
 	}
 
@@ -253,7 +250,7 @@ public class Utils {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	public static Map getJiraValue(String jiraKey, String rallyKey, JsonObject userStory, JsonObject project) throws IOException {
+	public static Map getJiraValue(String jiraKey, String rallyKey, JsonObject userStory, JsonObject project, JsonObject workspace) throws IOException {
 		List<String> values = getValueFromTree(rallyKey, userStory);
 		if (jiraKey.equals("labels[]")) {
 			List<String> labelsWithoutSpaces = new ArrayList<String>();
@@ -266,7 +263,7 @@ public class Utils {
 		if (jiraKey.equals("reporter.name")) {
 			List<String> jiraUser = new ArrayList<String>();
 			for (String s : values) {
-				String lookupJiraUsername = lookupJiraUsername(getJsonObjectName(project), s);
+				String lookupJiraUsername = lookupJiraUsername(getJiraProjectKeyForRallyProject(workspace, project), s);
 				if (Utils.isNotEmpty(lookupJiraUsername)) {
 					jiraUser.add(lookupJiraUsername);
 				}
@@ -279,7 +276,7 @@ public class Utils {
 		if (jiraKey.equals("priority.name")) {
 			List<String> translatedPriority = new ArrayList<String>();
 			for (String s : values) {
-				String jiraPriority = getJiraPriority(getJsonObjectName(project), s);
+				String jiraPriority = getJiraPriority(s);
 				translatedPriority.add(jiraPriority.substring(0, jiraPriority.indexOf("~")));
 			}
 			values = translatedPriority;
@@ -310,8 +307,8 @@ public class Utils {
 		return null;
 	}
 
-	private static String getJiraPriority(String project, String rallyPriority) throws IOException {
-		Map<String, String> pMap = getPriorityMapping(project);
+	private static String getJiraPriority(String rallyPriority) throws IOException {
+		Map<String, String> pMap = getPriorityMapping();
 		for (String jiraPriority : pMap.keySet()) {
 			if (pMap.get(jiraPriority).equalsIgnoreCase(rallyPriority)) {
 				return jiraPriority;
@@ -320,24 +317,24 @@ public class Utils {
 		return null;
 	}
 
-	public static String lookupJiraUsername(String projectName, String rallyUserObjectID) throws IOException {
+	public static String lookupJiraUsername(String jiraKey, String rallyUserObjectID) throws IOException {
 		if (jiraRallyUserMap == null) {
-			createJiraRallyUserMap(projectName);
+			createJiraRallyUserMap(jiraKey);
 		}
 		return jiraRallyUserMap.get(rallyUserObjectID);
 	}
 
-	public static Boolean getUserStatus(String projectName, String jiraUsername) throws IOException {
+	public static Boolean getUserStatus(String jiraKey, String jiraUsername) throws IOException {
 		if (userStatusMap == null) {
-			createJiraRallyUserMap(projectName);
+			createJiraRallyUserMap(jiraKey);
 		}
 		return userStatusMap.get(jiraUsername);
 	}
 
-	private static void createJiraRallyUserMap(String projectName) throws FileNotFoundException, IOException {
+	private static void createJiraRallyUserMap(String jiraKey) throws FileNotFoundException, IOException {
 		jiraRallyUserMap = new TreeMap<String, String>();
 		userStatusMap = new TreeMap<String, Boolean>();
-		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" + projectName.replaceAll(" ", "_"));
+		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" +jiraKey);
 		BufferedReader br = new BufferedReader(fr);
 		String stringRead = br.readLine();
 		int i = 0;
@@ -425,8 +422,8 @@ public class Utils {
 		return lValues;
 	}
 
-	public static String getJiraTransitionId(String project, String rallyStatus) throws IOException {
-		Map<String, String> statusMap = getWorkflowStatusMapping(project);
+	public static String getJiraTransitionId(String rallyStatus) throws IOException {
+		Map<String, String> statusMap = getWorkflowStatusMapping();
 		for (String jiraStatus : statusMap.keySet()) {
 			String rallyStatusInMap = statusMap.get(jiraStatus);
 			if (rallyStatusInMap.indexOf(";") > 0) {
@@ -471,9 +468,11 @@ public class Utils {
 				String rallyProjectName = st.nextToken();
 				String jiraProjectName = st.nextToken();
 				String jiraProjectKey = st.nextToken();
+				String releases = st.nextToken();
 				List<String> temp = new ArrayList<String>();
 				temp.add(jiraProjectName);
 				temp.add(jiraProjectKey);
+				temp.add(releases);
 				projectMapping.put(workspace + "-" + rallyProjectName, temp);
 			}
 			i++;
@@ -482,5 +481,22 @@ public class Utils {
 		br.close();
 		return projectMapping;
 
+	}
+
+	public static String getJiraProjectNameForRallyProject(JsonObject workspace, JsonObject project) {
+		return projectMapping.get(getKeyForWorkspaceAndProject(workspace, project)).get(0);
+	}
+
+	public static boolean migrateRelease(JsonObject workspace, JsonObject project, JsonObject release) {
+
+		String releases = projectMapping.get(getKeyForWorkspaceAndProject(workspace, project)).get(2);
+		if ("All".equals(releases)) {
+			return true;
+		}
+
+		if ((releases.toLowerCase().contains(getJsonObjectName(release).toLowerCase() + "|")) || (releases.toLowerCase().contains("|" + getJsonObjectName(release).toLowerCase()))) {
+			return true;
+		}
+		return false;
 	}
 }

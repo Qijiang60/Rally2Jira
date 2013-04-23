@@ -1,13 +1,14 @@
 package com.ceb.rallytojira;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.Utils;
@@ -17,35 +18,17 @@ import com.google.gson.JsonObject;
 
 public class RallyToJiraSetup1 {
 
-	RallyOperations rally;
-	JiraRestOperations jira;
-	Map<String, String> releaseVersionMap = new HashMap<String, String>();
-	int counter = 0;
-	int limit = 100000;
-	int progress = 0;
-	String projectName = "Web Hierarchy Tool";
-
-	public RallyToJiraSetup1() throws URISyntaxException {
-		rally = new RallyOperations();
-		jira = new JiraRestOperations();
-	}
-
-	public static void main(String[] args) throws URISyntaxException,
-			Exception {
-		RallyToJiraSetup1 rallyToJira = new RallyToJiraSetup1();
-		rallyToJira.process();
-
-	}
-
-	private void process() throws Exception {
-		JsonObject project = rally.getProjectByName("Support/Development").get(0).getAsJsonObject();
-		createRallyJiraUserMap(project);
-	}
-
-	private void createRallyJiraUserMap(JsonObject project) throws IOException {
-		Set<String> allUsers = getAllUsers(project);
+	public static boolean createRallyJiraUserMap(JsonObject workspace, JsonObject project, RallyOperations rally, JiraRestOperations jira) throws IOException {
+		String key = Utils.getJiraProjectKeyForRallyProject(workspace, project);
+		File f = new File("mappings/jira_rally_user_mapping_" + key);
+		if (f.exists()) {
+			return true;
+		}
+		boolean success = true;
+		Set<String> allUsers = getAllUsers(project, rally);
 		System.out.println(allUsers.size());
-		BufferedWriter bw = new BufferedWriter(new FileWriter("mappings/jira_rally_user_mapping_" + projectName.replaceAll(" ", "_")));
+
+		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 		bw.write("\nRally ObjectID\tRally DisplayName\tJira DisplayName\tRally UserName\tJira UserName\tDisabled\tMatch");
 		for (String rallyUserObjectID : allUsers) {
 			JsonObject rallyUser = rally.findRallyObjectByObjectID(project, RallyObject.USER, rallyUserObjectID);
@@ -71,28 +54,30 @@ public class RallyToJiraSetup1 {
 				ex.printStackTrace();
 				bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t"
 						+ rallyUser.get("Disabled").getAsString() + "\tN");
+				success = false;
 			}
 			bw.flush();
 
 		}
 		bw.close();
+		return success;
 	}
 
-	private Set<String> getAllUsers(JsonObject workspace, JsonObject project) throws IOException {
+	private static Set<String> getAllUsers(JsonObject project, RallyOperations rally) throws IOException {
 		Set<String> allUsers = new HashSet<String>();
-		JsonArray tasks = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.TASK);
+		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
 		for (JsonElement jeTask : tasks) {
 			addOwnerToSet(allUsers, jeTask, project);
 
 		}
 		tasks = null;
-		JsonArray defects = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.DEFECT);
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
 		for (JsonElement jeDefect : defects) {
 			addOwnerToSet(allUsers, jeDefect, project);
 
 		}
 		defects = null;
-		JsonArray userStories = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.USER_STORY);
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
 		for (JsonElement jeUserStory : userStories) {
 			addOwnerToSet(allUsers, jeUserStory, project);
 
@@ -100,7 +85,7 @@ public class RallyToJiraSetup1 {
 		return allUsers;
 	}
 
-	private void addOwnerToSet(Set<String> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
+	private static void addOwnerToSet(Set<String> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
 		JsonObject rallyWorkProduct = jeRallyWorkProduct.getAsJsonObject();
 		if (isNotJsonNull(rallyWorkProduct, "Owner")) {
 			JsonObject owner = rallyWorkProduct.get("Owner").getAsJsonObject();
@@ -110,11 +95,11 @@ public class RallyToJiraSetup1 {
 		}
 	}
 
-	private boolean isNotJsonNull(JsonObject rallyWorkProduct, String field) {
+	private static boolean isNotJsonNull(JsonObject rallyWorkProduct, String field) {
 		return !isJsonNull(rallyWorkProduct, field);
 	}
 
-	private boolean isJsonNull(JsonObject rallyWorkProduct, String field) {
+	private static boolean isJsonNull(JsonObject rallyWorkProduct, String field) {
 		if (Utils.isEmpty(rallyWorkProduct) || Utils.isEmpty(rallyWorkProduct.get(field)) || rallyWorkProduct.get(field).isJsonNull()) {
 			return true;
 		}
@@ -123,5 +108,34 @@ public class RallyToJiraSetup1 {
 		}
 		return false;
 	}
+	
+	public static void addUsersToProjectRole(String jiraProjectKey) throws Exception {
+		JiraRestOperations jira = new JiraRestOperations();
+		jira.addUserToProjectRoles(jiraProjectKey, "rally_jira_migration", new String[] { "Developers", "Users" });
+		jira.addUserToProjectRoles(jiraProjectKey, "hagarwal", new String[] { "Developers", "Users" });
+		jira.addUserToProjectRoles(jiraProjectKey, "tberg", new String[] { "Developers", "Users" });
+		BufferedReader br = new BufferedReader(new FileReader("mappings/jira_rally_user_mapping_" + jiraProjectKey));
+		String line = br.readLine();
+		while (line != null) {
+			if (Utils.isNotEmpty(line)) {
+				line = line.replaceAll("\\t", " | ");
+				StringTokenizer st = new StringTokenizer(line, "|");
+				String rallyObjectId = st.nextToken();
+				String rallyDisplayName = st.nextToken();
+				String jiraDisplayName = st.nextToken();
+				String rallyUserName = st.nextToken();
+				String jiraUserName = st.nextToken();
+				String disable = st.nextToken();
+				String match = st.nextToken();
+				if (Utils.isNotEmpty(jiraUserName)) {
+					jira.addUserToProjectRoles(jiraProjectKey, jiraUserName, new String[] { "Developers", "Users" });
+				}
+
+			}
+			line = br.readLine();
+		}
+		br.close();
+	}
+
 
 }

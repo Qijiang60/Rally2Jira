@@ -14,19 +14,20 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.rallydev.rest.request.GetRequest;
+import com.rallydev.rest.request.UpdateRequest;
 import com.rallydev.rest.response.GetResponse;
+import com.rallydev.rest.response.UpdateResponse;
 
 public class RallyOperations {
 	RallyJsonClient client;
 
-	public RallyOperations() throws URISyntaxException {
+	public RallyOperations() throws URISyntaxException, IOException {
 		client = new RallyJsonClient();
 
 	}
 
 	public JsonObject findRallyObjectByFormatteID(JsonObject project, String formattedID, RallyObject workProductType) throws IOException {
-		List<String> dataElements = Utils.elementsTobeFetched(
-				Utils.getJsonObjectName(project), workProductType);
+		List<String> dataElements = Utils.elementsTobeFetched(workProductType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("FormattedID", formattedID);
 		JsonArray arr = client.searchObjects(workProductType, filter, dataElements);
@@ -48,7 +49,7 @@ public class RallyOperations {
 	//
 
 	public JsonObject findRallyObjectByObjectID(JsonObject project, RallyObject objectType, String objectID) throws IOException {
-		List<String> dataElements = Utils.elementsTobeFetched(Utils.getJsonObjectName(project), objectType);
+		List<String> dataElements = Utils.elementsTobeFetched(objectType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("ObjectID", objectID);
 		JsonArray results = client.searchObjects(objectType, filter, dataElements);
@@ -78,34 +79,28 @@ public class RallyOperations {
 	public JsonObject getObjectFromRef(JsonElement objectElement) throws IOException {
 		String url = objectElement.getAsJsonObject().get("_ref").getAsString();
 		GetRequest request = new GetRequest(url);
+		request.addParam("fetch", "true");
 		GetResponse response = client.getApi().get(request);
 		return response.getObject();
 	}
 
+	public JsonArray getRallyObjectsForProject(JsonObject project, RallyObject objectType) throws IOException {
 
-	public JsonArray getRallyObjectsForProjectAndWorkspace(JsonObject workspace, JsonObject project, RallyObject objectType) throws IOException {
-		String workspaceRef = workspace.get("_ref").getAsString();
-		String workspaceRefWithoutJs = workspaceRef.substring(0, workspaceRef.length() - 3);
-		String url = "/" + objectType.getCode();
-		int startIndex = 1;
-		int maxPageSize = 200;
-		int remaining = maxPageSize;
-		int currentPage = 0;
-		JsonArray allObjects = new JsonArray();
-		while (remaining > 0) {
-			startIndex = currentPage * maxPageSize + 1;
-			GetRequest request = new GetRequest(url);
-			request.addParam("workspace", workspaceRefWithoutJs);
-			request.addParam("query", "(Project.ObjectID = " + project.get("ObjectID").getAsString() + ")");
-			request.addParam("fetch", "false");
-			request.addParam("pagesize", "200");
-			request.addParam("start", "" + startIndex);
-			GetResponse response = client.getApi().get(request);
-			int totalResults = Integer.parseInt(response.getObject().get("TotalResultCount").getAsString());
-			allObjects.addAll(response.getObject().get("Results").getAsJsonArray());
-			currentPage++;
-			remaining = totalResults - maxPageSize * currentPage;
-		}
-		return allObjects;
+		List<String> dataElements = Utils.elementsTobeFetched(objectType);
+		Map<String, String> filter = new LinkedHashMap<String, String>();
+		filter.put("Project.ObjectID", project.get("ObjectID").getAsString());
+		return client.searchObjects(objectType, filter, dataElements);
+	}
+
+	public void updateDefaultWorkspace(JsonObject workspace, JsonObject project) throws IOException, URISyntaxException {
+		JsonObject userProfile = client.getLoggedInUserProfile();
+		String userProfileRef = client.getLoggedInUserProfile().get("_ref").getAsString();
+		userProfile.add("DefaultWorkspace", workspace);
+		userProfile.add("DefaultProject", project);
+		UpdateRequest updateRequest = new UpdateRequest(userProfileRef, userProfile);
+		UpdateResponse response = client.getApi().update(updateRequest);
+		client.login();
+		System.out.println(response.getObject());
+
 	}
 }

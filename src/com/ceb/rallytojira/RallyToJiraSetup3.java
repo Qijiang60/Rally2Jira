@@ -20,15 +20,17 @@ public class RallyToJiraSetup3 {
 
 	RallyOperations rally;
 	JiraRestOperations jira;
+	JiraSoapOperations jiraSoap;
 	Map<String, String> releaseVersionMap = new HashMap<String, String>();
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
 	public static String PROJECT = "Next Generation Web";
 
-	public RallyToJiraSetup3() throws URISyntaxException {
+	public RallyToJiraSetup3() throws Exception {
 		rally = new RallyOperations();
 		jira = new JiraRestOperations();
+		jiraSoap = new JiraSoapOperations();
 	}
 
 	public static void main(String[] args) throws URISyntaxException,
@@ -45,63 +47,78 @@ public class RallyToJiraSetup3 {
 
 		for (JsonElement workspaceEle : workspaces) {
 			JsonObject workspace = workspaceEle.getAsJsonObject();
-			JsonArray projects = workspace.get("Projects").getAsJsonArray();
-			for (JsonElement projEle : projects) {
-				JsonObject project = rally.getObjectFromRef(projEle);
-				String key = Utils.getKeyForWorkspaceAndProject(workspace, project);
-				if (projectMapping.containsKey(key)) {
-					createReleases(workspace, project);
-					createTasks(workspace, project);
-					createDefects(workspace, project);
-					createUserStories(workspace, project);
+			String workspaceName = Utils.getJsonObjectName(workspace);
+			if (workspaceName.equals("Accelerate")) {
+				JsonArray projects = workspace.get("Projects").getAsJsonArray();
+				for (JsonElement projEle : projects) {
+					JsonObject project = rally.getObjectFromRef(projEle);
+					String key = Utils.getKeyForWorkspaceAndProject(workspace, project);
+					if (projectMapping.containsKey(key)) {
+						System.out.println(key);
+						rally.updateDefaultWorkspace(workspace, project);
+						createProject(workspace, project);
+						boolean success = RallyToJiraSetup1.createRallyJiraUserMap(workspace, project, rally, jira);
+						if (success) {
+							RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace, project));
+						}
+						createReleases(workspace, project);
+						createTasks(workspace, project);
+						createDefects(workspace, project);
+						createUserStories(workspace, project);
+					}
+					break;
 				}
 				break;
 			}
 		}
+	}
 
-		// JsonObject project =
-		// rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
-		// deleteDuplicates(project);
-		// createReleases(project);
-		//
-		// String[] projectNames = new String[] { "EXBD",
-		// "LE Move to CWS Integrated Backend", "Search Services",
-		// "CMS Project", "Discussions",
-		// "Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
-		// "NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
-		// "Test Automation", "Test Automation - Web V2",
-		// "Test Automation - Workspace", "Web Expansion", "Workspace",
-		// "Next Generation Web" };
-		// String[] projectNames = new String[] { "Site Catalyst",
-		// "Test Automation", "Test Automation - Web V2",
-		// "Test Automation - Workspace", "Web Expansion", "Workspace",
-		// "Next Generation Web" };
+	// JsonObject project =
+	// rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
+	// deleteDuplicates(project);
+	// createReleases(project);
+	//
+	// String[] projectNames = new String[] { "EXBD",
+	// "LE Move to CWS Integrated Backend", "Search Services",
+	// "CMS Project", "Discussions",
+	// "Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
+	// "NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
+	// "Test Automation", "Test Automation - Web V2",
+	// "Test Automation - Workspace", "Web Expansion", "Workspace",
+	// "Next Generation Web" };
+	// String[] projectNames = new String[] { "Site Catalyst",
+	// "Test Automation", "Test Automation - Web V2",
+	// "Test Automation - Workspace", "Web Expansion", "Workspace",
+	// "Next Generation Web" };
 
-		// String[] projectNames = new String[] { "Support/Development" };
-		// for (String projectName : projectNames) {
-		// JsonObject project =
-		// rally.getProjectByName(projectName).get(0).getAsJsonObject();
-		// Utils.reinitialize();
-		// System.out.println(projectName + ", " +
-		// Utils.getJsonObjectName(project) + ", " +
-		// Utils.getJiraProjectNameForRallyProject(project));
-		// try {
-		// while (deleteAllIssuesInJira(project)) {
-		// System.out.println("deleting ...");
-		// }
-		// } catch (Exception e) {
-		//
-		// }
-		// deleteDuplicates(project);
-		// createReleases(project);
+	// String[] projectNames = new String[] { "Support/Development" };
+	// for (String projectName : projectNames) {
+	// JsonObject project =
+	// rally.getProjectByName(projectName).get(0).getAsJsonObject();
+	// Utils.reinitialize();
+	// System.out.println(projectName + ", " +
+	// Utils.getJsonObjectName(project) + ", " +
+	// Utils.getJiraProjectNameForRallyProject(project));
+	// try {
+	// while (deleteAllIssuesInJira(project)) {
+	// System.out.println("deleting ...");
+	// }
+	// } catch (Exception e) {
+	//
+	// }
+	// deleteDuplicates(project);
+	// createReleases(project);
 
-		// }
+	// }
+
+	private void createProject(JsonObject workspace, JsonObject project) throws IOException {
+		jiraSoap.createProject(workspace, project);
 
 	}
 
 	private void deleteDuplicates(JsonObject workspace, JsonObject project) throws IOException {
 
-		JsonArray userStories = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.USER_STORY);
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
 		progress = 0;
 		int totalUserStories = userStories.size();
 		for (JsonElement jeUserStory : userStories) {
@@ -109,7 +126,7 @@ public class RallyToJiraSetup3 {
 			JsonObject userStory = jeUserStory.getAsJsonObject();
 			deleteDuplicates(workspace, project, userStory.get("FormattedID").getAsString());
 		}
-		JsonArray defects = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.DEFECT);
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
 		progress = 0;
 		int totalDefects = defects.size();
 		for (JsonElement jeDefect : defects) {
@@ -117,7 +134,7 @@ public class RallyToJiraSetup3 {
 			JsonObject defect = jeDefect.getAsJsonObject();
 			deleteDuplicates(workspace, project, defect.get("FormattedID").getAsString());
 		}
-		JsonArray tasks = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.TASK);
+		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
 		progress = 0;
 		int totalTasks = tasks.size();
 		for (JsonElement jeTask : tasks) {
@@ -128,22 +145,25 @@ public class RallyToJiraSetup3 {
 	}
 
 	private void deleteDuplicates(JsonObject workspace, JsonObject project, String rallyFormattedId) throws IOException {
-		jira.deleteDuplicateIssue(Utils.getJiraProjectNameForRallyProject(workspace, project), rallyFormattedId);
+		jira.deleteDuplicateIssue(Utils.getJiraProjectKeyForRallyProject(workspace, project), rallyFormattedId);
 
 	}
 
 	private void createReleases(JsonObject workspace, JsonObject project) throws Exception {
-		JsonArray releases = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.RELEASE);
+		JsonArray releases = rally.getRallyObjectsForProject(project, RallyObject.RELEASE);
 		for (JsonElement release : releases) {
-			String jiraVersionId = jira.createVersion(workspace, project, release.getAsJsonObject());
-			releaseVersionMap.put(release.getAsJsonObject().get("ObjectID").getAsString(), jiraVersionId);
+			if (Utils.migrateRelease(workspace, project, release.getAsJsonObject())) {
+				String jiraVersionId = jira.createVersion(workspace, project, release.getAsJsonObject());
+				releaseVersionMap.put(release.getAsJsonObject().get("_ref").getAsString(), jiraVersionId);
+			}
 		}
 	}
 
 	private void createTasks(JsonObject workspace, JsonObject project) throws Exception {
-		JsonArray tasks = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.TASK);
+		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
 		progress = 0;
 		int totalTasks = tasks.size();
+		System.out.println(totalTasks);
 		for (JsonElement jeTask : tasks) {
 			System.out.println("**TASK " + progress++ + " of " + totalTasks + " *************************************");
 			JsonObject task = jeTask.getAsJsonObject();
@@ -152,7 +172,7 @@ public class RallyToJiraSetup3 {
 	}
 
 	private void createDefects(JsonObject workspace, JsonObject project) throws Exception {
-		JsonArray defects = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.DEFECT);
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
 		progress = 0;
 		int totalDefects = defects.size();
 		for (JsonElement jeDefect : defects) {
@@ -164,7 +184,7 @@ public class RallyToJiraSetup3 {
 	}
 
 	private void createUserStories(JsonObject workspace, JsonObject project) throws Exception {
-		JsonArray userStories = rally.getRallyObjectsForProjectAndWorkspace(workspace, project, RallyObject.USER_STORY);
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
 		progress = 0;
 		int totalUserStories = userStories.size();
 		for (JsonElement jeUserStory : userStories) {
@@ -176,7 +196,7 @@ public class RallyToJiraSetup3 {
 
 	private void findOrCreateIssueInJiraForTask(JsonObject workspace, JsonObject project, JsonObject task) throws Exception {
 		String rallyFormattedId = task.get("FormattedID").getAsString();
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(workspace, project), rallyFormattedId);
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectKeyForRallyProject(workspace, project), rallyFormattedId);
 		if (Utils.isEmpty(jiraIssue)) {
 			String jiraVersionId = getJiraVersionIdForRelease(task);
 			if (task.get("WorkProduct") == null || task.get("WorkProduct").isJsonNull()) {
@@ -204,7 +224,7 @@ public class RallyToJiraSetup3 {
 	}
 
 	private JsonObject findOrCreateIssueInJiraForUserStory(JsonObject workspace, JsonObject project, String userStoryFormattedID) throws Exception {
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(workspace, project), userStoryFormattedID);
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectKeyForRallyProject(workspace, project), userStoryFormattedID);
 		if (Utils.isEmpty(jiraIssue)) {
 			JsonObject userStory = rally.findRallyObjectByFormatteID(project, userStoryFormattedID, RallyObject.USER_STORY);
 			if (Utils.isNotEmpty(userStory)) {
@@ -223,7 +243,7 @@ public class RallyToJiraSetup3 {
 	}
 
 	private JsonObject findOrCreateIssueInJiraForDefect(JsonObject workspace, JsonObject project, String defectFormattedID) throws Exception {
-		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectNameForRallyProject(workspace, project), defectFormattedID);
+		JsonObject jiraIssue = jira.findIssueByRallyFormattedID(Utils.getJiraProjectKeyForRallyProject(workspace, project), defectFormattedID);
 
 		if (Utils.isEmpty(jiraIssue)) {
 			JsonObject defect = rally.findRallyObjectByFormatteID(project, defectFormattedID, RallyObject.DEFECT);
@@ -252,7 +272,7 @@ public class RallyToJiraSetup3 {
 		processNotes(project, rallyWorkProduct, jiraIssue);
 		processWorkLog(project, rallyWorkProduct, jiraIssue);
 		boolean stateChanged = processStatus(project, rallyWorkProduct, jiraIssue);
-		updateAssignee(project, rallyWorkProduct, jiraIssue);
+		updateAssignee(workspace, project, rallyWorkProduct, jiraIssue);
 		updateCreateAndUpdateDate(project, rallyWorkProduct, jiraIssue, stateChanged);
 		return jiraIssue;
 	}
@@ -261,9 +281,10 @@ public class RallyToJiraSetup3 {
 		jira.updateDatesInDatabase(Utils.getJsonObjectName(project), jiraIssue.get("id").getAsString(), rallyWorkProduct, stateChanged);
 	}
 
-	private void updateAssignee(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
+	private void updateAssignee(JsonObject workspace, JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		if (isNotJsonNull(rallyWorkProduct, "Owner") && isNotJsonNull(rallyWorkProduct.get("Owner").getAsJsonObject(), "ObjectID")) {
-			jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Owner").getAsJsonObject().get("ObjectID").getAsString());
+			jira.updateIssueAssignee(Utils.getJiraProjectKeyForRallyProject(workspace, project), jiraIssue.get("key").getAsString(), rallyWorkProduct.get("Owner").getAsJsonObject().get("ObjectID")
+					.getAsString());
 		} else {
 			if (isNotJsonNull(rallyWorkProduct, "rally-parent-owner")) {
 				JsonElement jeRallyOwner = rallyWorkProduct.get("rally-parent-owner");
@@ -280,7 +301,7 @@ public class RallyToJiraSetup3 {
 	private boolean processStatus(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		if (isNotJsonNull(rallyWorkProduct, "ScheduleState")) {
 			String rallyStatus = rallyWorkProduct.get("ScheduleState").getAsString();
-			String jiraTransitionId = Utils.getJiraTransitionId(Utils.getJsonObjectName(project), rallyStatus);
+			String jiraTransitionId = Utils.getJiraTransitionId(rallyStatus);
 			if ("1".equals(jiraTransitionId)) {
 				return false;
 			}
@@ -288,7 +309,7 @@ public class RallyToJiraSetup3 {
 		}
 		if (isNotJsonNull(rallyWorkProduct, "State")) {
 			String rallyStatus = rallyWorkProduct.get("State").getAsString();
-			String jiraTransitionId = Utils.getJiraTransitionId(Utils.getJsonObjectName(project), rallyStatus);
+			String jiraTransitionId = Utils.getJiraTransitionId(rallyStatus);
 			if (jiraTransitionId.equals("1")) {
 				return false;
 			}
@@ -375,12 +396,12 @@ public class RallyToJiraSetup3 {
 
 	private void addParentFields(JsonObject rallyWorkProduct, JsonObject jiraParentIssue) {
 		rallyWorkProduct.add("jira-parent-key", getParentKey(jiraParentIssue));
-		rallyWorkProduct.add("rally-parent-owner", jiraParentIssue.get("Owner"));
+		rallyWorkProduct.add("rally-parent-owner", rallyWorkProduct.get("Owner"));
 	}
 
 	private String getJiraVersionIdForRelease(JsonObject rallyObject) {
 		if (rallyObject.get("Release") != null && !rallyObject.get("Release").isJsonNull()) {
-			return releaseVersionMap.get(rallyObject.get("Release").getAsJsonObject().get("ObjectID").getAsString());
+			return releaseVersionMap.get(rallyObject.get("Release").getAsJsonObject().get("_ref").getAsString());
 		}
 		return null;
 	}

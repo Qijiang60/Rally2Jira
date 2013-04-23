@@ -36,15 +36,14 @@ public class JiraRestOperations {
 	@SuppressWarnings("unchecked")
 	public String createVersion(JsonObject workspace, JsonObject project, JsonObject release)
 			throws IOException {
-		String projectName = Utils.getJsonObjectName(project);
 		String versionId = findProjectVersionByName(workspace, project, Utils.getJsonObjectName(release));
 		if (Utils.isEmpty(versionId)) {
-			Map<String, String> mapping = Utils.getElementMapping(RallyObject.RELEASE, projectName);
+			Map<String, String> mapping = Utils.getElementMapping(RallyObject.RELEASE);
 			Map<String, Object> data = new LinkedHashMap<String, Object>();
-			data.put("project", Utils.getJiraProjectNameForRallyProject(workspace, project));
+			data.put("project", Utils.getJiraProjectKeyForRallyProject(workspace, project));
 
 			for (String key : mapping.keySet()) {
-				Map m = Utils.getJiraValue(key, mapping.get(key), release, project);
+				Map m = Utils.getJiraValue(key, mapping.get(key), release, project, workspace);
 				if (Utils.isNotEmpty(m)) {
 					data.putAll(m);
 				}
@@ -74,7 +73,7 @@ public class JiraRestOperations {
 
 	public JsonArray findProjectVersions(JsonObject workspace, JsonObject project) throws IOException {
 		ClientResponse response = api.doGet("/rest/api/latest/project/"
-				+ Utils.getJiraProjectNameForRallyProject(workspace, project)
+				+ Utils.getJiraProjectKeyForRallyProject(workspace, project)
 				+ "/versions");
 		JsonArray versions = Utils.jerseyRepsonseToJsonArray(response);
 		return versions;
@@ -107,12 +106,12 @@ public class JiraRestOperations {
 	private Map<String, Object> getIssueCreateMap(JsonObject workspace, JsonObject project, String versionId, JsonObject rallyIssue, RallyObject workProductType, String jiraIssueType)
 			throws IOException {
 		String projectName = Utils.getJsonObjectName(project);
-		Map<String, String> mapping = Utils.getElementMapping(workProductType, projectName);
+		Map<String, String> mapping = Utils.getElementMapping(workProductType);
 		Map<String, Object> postData = new LinkedHashMap<String, Object>();
 		Map<String, Object> issueData = new LinkedHashMap<String, Object>();
 
 		Map projectKey = new HashMap();
-		projectKey.put("key", Utils.getJiraProjectNameForRallyProject(workspace, project));
+		projectKey.put("key", Utils.getJiraProjectKeyForRallyProject(workspace, project));
 		issueData.put("project", projectKey);
 
 		Map issuetype = new HashMap();
@@ -127,7 +126,7 @@ public class JiraRestOperations {
 			issueData.put("fixVersions", versions);
 		}
 		for (String key : mapping.keySet()) {
-			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue, project);
+			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue, project,workspace);
 			if (jiraMap != null) {
 				String topKey = (String) jiraMap.keySet().toArray()[0];
 				if (issueData.containsKey(topKey)) {
@@ -174,7 +173,7 @@ public class JiraRestOperations {
 	}
 
 	public boolean deleteAllIssues(JsonObject workspace, JsonObject project) throws IOException {
-		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectNameForRallyProject(workspace, project) + "&maxResults=200";
+		String url = "/rest/api/latest/search?jql=project=" + Utils.getJiraProjectKeyForRallyProject(workspace, project) + "&maxResults=200";
 		JsonArray issues = Utils.jerseyRepsonseToJsonObject(api.doGet(url)).get("issues").getAsJsonArray();
 		for (JsonElement issue : issues) {
 			String issueKey = issue.getAsJsonObject().get("key").getAsString();
@@ -248,8 +247,8 @@ public class JiraRestOperations {
 
 	}
 
-	public void updateIssueAssignee(String projectName, String issueKey, String rallyOwnerObjectID) throws Exception {
-		String jiraUsername = Utils.lookupJiraUsername(projectName, rallyOwnerObjectID);
+	public void updateIssueAssignee(String jiraKey, String issueKey, String rallyOwnerObjectID) throws Exception {
+		String jiraUsername = Utils.lookupJiraUsername(jiraKey, rallyOwnerObjectID);
 
 		if (Utils.isEmpty(jiraUsername)) {
 			System.err.println(" Rally user: " +
@@ -372,5 +371,6 @@ public class JiraRestOperations {
 		}
 
 	}
+
 
 }
