@@ -1,14 +1,18 @@
 						
 Rally ObjectID	Rally DisplayName	Jira DisplayName	Rally UserName	Jira UserName	Disabled	Match
-2365854373	Jenjerala, Sagar	Jenjarala, Sagar	sagar.jenjerala@globallogic.com	Sjenjarala	TRUE	N
 1457512577	Mirchandani, Mac	Mirchandani, Mac	mirchanm@executiveboard.com	Mirchanm	FALSE	Y
-6537953900	Gandhi, Swati	Gandhi, Swati	swati.gandhi@globallogic.com	SGandhi	FALSE	Y
-2365841768	Rohatgi, Ritesh	rally_jira_migration	ritesh.rohatgi@globallogic.com	rally_jira_migration	FALSE	N
-2365862825	Verma, Trishant	Verma, Trishant	trishant.verma@globallogic.com	TVerma	FALSE	Y
-2262285995	Goyal, Alisha	rally_jira_migration	alisha.goyal@globallogic.com	rally_jira_migration	FALSE	N
-2365890385	Agarwal, Varun	Agarwal, Varun	varun.agarwal@globallogic.com	VAgarwal	FALSE	Y
-4745224566	Upadhyay, Pankaj	Upadhyay, Pankaj	pankaj.upadhyay@globallogic.com	PUpadhyay	FALSE	Y
-2365817617	Chandra, Nidhish	Chandra, Nidhish	nidhish.chandra@globallogic.com	NChandra	TRUE	Y
-2262292719	Shah, Poorva	Shah, Poorva	poorva.shah@globallogic.com	PShah	FALSE	Y
-3732620605	Omer, Masoud	Omer, Masoud	momer@executiveboard.com	momer	FALSE	Y
+2365898880	Shekhar, Vibhu	Shekhar, Vibhu	vibhu.shekhar@globallogic.com	VShekhar	FALSE	Y
 4116929649	Safferstone, Rachel	Safferstone, Rachel	telegenr@executiveboard.com	telegenr	FALSE	Y
+3996087000	Marwah, Ashwani	Marwah, Ashwani	amarwah@executiveboard.com	amarwah	FALSE	Y
+3732620605	Omer, Masoud	Omer, Masoud	momer@executiveboard.com	momer	FALSE	Y
+6537953900	Gandhi, Swati	Gandhi, Swati	swati.gandhi@globallogic.com	SGandhi	FALSE	Y
+11436642008	Agarwal, Harsh	Agarwal, Harsh	hgarwal@executiveboard.com	hagarwal	false	Y
+4443498760	Juneja, Gopal	Juneja, Gopal	gopal.juneja@globallogic.com	GJuneja	FALSE	Y
+2262292719	Shah, Poorva	Shah, Poorva	poorva.shah@globallogic.com	PShah	FALSE	Y
+1457897551	Christensen, John	Christensen, John	jchristensen@executiveboard.com	jchristensen	FALSE	Y
+1457981483	Brownlie, Craig	Brownlie, Craig	cbrownlie@executiveboard.com	cbrownlie	FALSE	Y
+2365841768	Rohatgi, Ritesh	rally_jira_migration	ritesh.rohatgi@globallogic.com	rally_jira_migration	FALSE	N
+4745224566	Upadhyay, Pankaj	Upadhyay, Pankaj	pankaj.upadhyay@globallogic.com	PUpadhyay	FALSE	Y
+2365890385	Agarwal, Varun	Agarwal, Varun	varun.agarwal@globallogic.com	VAgarwal	FALSE	Y
+2262285995	Goyal, Alisha	rally_jira_migration	alisha.goyal@globallogic.com	rally_jira_migration	FALSE	N
+2365862825	Verma, Trishant	Verma, Trishant	trishant.verma@globallogic.com	TVerma	FALSE	Y

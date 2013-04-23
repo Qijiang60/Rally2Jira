@@ -55,15 +55,10 @@ public class RallyToJiraSetup3 {
 					System.out.println(key);
 					rally.updateDefaultWorkspace(workspace, project);
 					createProject(workspace, project);
-//					if (projectMapping.get(key).get(3).equals("N")) {
-//						boolean success = RallyToJiraSetup1.createRallyJiraUserMap(workspace, project, rally, jira);
-//						if (success) {
-//							RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace, project));
-//						} else {
-//							System.out.println("Fix user names");
-//							return;
-//						}
-//					}
+					// RallyToJiraSetup1.createRallyJiraUserMap(workspace,
+					// project, rally, jira);
+					// RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace,
+					// project));
 					createReleases(workspace, project);
 					createTasks(workspace, project);
 					createDefects(workspace, project);
@@ -295,7 +290,8 @@ public class RallyToJiraSetup3 {
 				if (jeRallyOwner != null && jeRallyOwner.isJsonObject()) {
 					JsonObject rallyOwner = jeRallyOwner.getAsJsonObject();
 					if (isNotJsonNull(rallyOwner.getAsJsonObject(), "ObjectID")) {
-						jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyOwner.get("ObjectID").getAsString(),rallyOwner.get("_refObjectName").getAsString());
+						jira.updateIssueAssignee(Utils.getJsonObjectName(project), jiraIssue.get("key").getAsString(), rallyOwner.get("ObjectID").getAsString(), rallyOwner.get("_refObjectName")
+								.getAsString());
 					}
 				}
 			}
@@ -372,7 +368,7 @@ public class RallyToJiraSetup3 {
 	}
 
 	private void uploadAttachmentToJira(JsonObject project, JsonObject attachment, JsonObject jiraIssue) throws Exception {
-		attachment = rally.findRallyObjectByObjectID( RallyObject.ATTACHMENT, attachment.get("ObjectID").getAsString());
+		attachment = rally.findRallyObjectByObjectID(RallyObject.ATTACHMENT, attachment.get("ObjectID").getAsString());
 		String fileName = attachment.get("Name").getAsString();
 		String description = isNotJsonNull(attachment, "Description") ? attachment.get("Description").getAsString() : "";
 		JsonObject attachmentContent = jira.getRallyAttachment(attachment.get("Content").getAsJsonObject().get("_ref").getAsString());
