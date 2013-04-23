@@ -48,28 +48,31 @@ public class RallyToJiraSetup3 {
 		for (JsonElement workspaceEle : workspaces) {
 			JsonObject workspace = workspaceEle.getAsJsonObject();
 			String workspaceName = Utils.getJsonObjectName(workspace);
-			if (workspaceName.equals("Accelerate")) {
-				JsonArray projects = workspace.get("Projects").getAsJsonArray();
-				for (JsonElement projEle : projects) {
-					JsonObject project = rally.getObjectFromRef(projEle);
-					String key = Utils.getKeyForWorkspaceAndProject(workspace, project);
-					if (projectMapping.containsKey(key)) {
-						System.out.println(key);
-						rally.updateDefaultWorkspace(workspace, project);
-						createProject(workspace, project);
+			JsonArray projects = workspace.get("Projects").getAsJsonArray();
+			for (JsonElement projEle : projects) {
+				JsonObject project = rally.getObjectFromRef(projEle);
+				String key = Utils.getKeyForWorkspaceAndProject(workspace, project);
+				if (projectMapping.containsKey(key)) {
+					System.out.println(key);
+					rally.updateDefaultWorkspace(workspace, project);
+					createProject(workspace, project);
+					if (false) {
 						boolean success = RallyToJiraSetup1.createRallyJiraUserMap(workspace, project, rally, jira);
 						if (success) {
 							RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace, project));
+						} else {
+							System.out.println("Fix user names");
+							return;
 						}
-						createReleases(workspace, project);
-						createTasks(workspace, project);
-						createDefects(workspace, project);
-						createUserStories(workspace, project);
 					}
-					break;
+					createReleases(workspace, project);
+					createTasks(workspace, project);
+					createDefects(workspace, project);
+					createUserStories(workspace, project);
 				}
 				break;
 			}
+			break;
 		}
 	}
 
@@ -207,11 +210,13 @@ public class RallyToJiraSetup3 {
 				String workProductFormattedID = rallyTaskWorkProduct.get("FormattedID").getAsString();
 				if (workProductType.equalsIgnoreCase("hierarchicalrequirement")) {
 					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(workspace, project, workProductFormattedID);
+					jiraParentIssue = jira.findIssueByIssueKey(jiraParentIssue.get("key").getAsString());
 					addParentFields(task, jiraParentIssue);
 					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 				} else {
 					if (workProductType.equalsIgnoreCase("defect")) {
 						JsonObject jiraParentIssue = findOrCreateIssueInJiraForDefect(workspace, project, workProductFormattedID);
+						jiraParentIssue = jira.findIssueByIssueKey(jiraParentIssue.get("key").getAsString());
 						addParentFields(task, jiraParentIssue);
 						jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, task, RallyObject.TASK, "Sub-task");
 					} else {
@@ -234,6 +239,7 @@ public class RallyToJiraSetup3 {
 				} else {
 					String parentUserStoryFormattedID = userStory.get("Parent").getAsJsonObject().get("FormattedID").getAsString();
 					JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(workspace, project, parentUserStoryFormattedID);
+					jiraParentIssue = jira.findIssueByIssueKey(jiraParentIssue.get("key").getAsString());
 					addParentFields(userStory, jiraParentIssue);
 					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, userStory, RallyObject.USER_STORY, "Sub-story");
 				}
@@ -254,6 +260,7 @@ public class RallyToJiraSetup3 {
 				String parentDefectFormattedID = defect.get("Requirement").getAsJsonObject().get("FormattedID").getAsString();
 				JsonObject jiraParentIssue = findOrCreateIssueInJiraForUserStory(workspace, project, parentDefectFormattedID);
 				if (Utils.isNotEmpty(jiraParentIssue)) {
+					jiraParentIssue = jira.findIssueByIssueKey(jiraParentIssue.get("key").getAsString());
 					addParentFields(defect, jiraParentIssue);
 					jiraIssue = createIssueInJiraAndProcessSpecialItems(workspace, project, jiraVersionId, defect, RallyObject.DEFECT, "Defect");
 				} else {
@@ -387,7 +394,7 @@ public class RallyToJiraSetup3 {
 	}
 
 	private JsonElement getParentKey(JsonObject jiraParentIssue) {
-		JsonElement parentsParent = jiraParentIssue.get("parent");
+		JsonElement parentsParent = jiraParentIssue.get("fields").getAsJsonObject().get("parent");
 		if (parentsParent == null || isJsonNull(parentsParent.getAsJsonObject(), "key")) {
 			return jiraParentIssue.get("key");
 		}
