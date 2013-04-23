@@ -48,7 +48,7 @@ public class RallyOperations {
 	// }
 	//
 
-	public JsonObject findRallyObjectByObjectID(JsonObject project, RallyObject objectType, String objectID) throws IOException {
+	public JsonObject findRallyObjectByObjectID( RallyObject objectType, String objectID) throws IOException {
 		List<String> dataElements = Utils.elementsTobeFetched(objectType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("ObjectID", objectID);

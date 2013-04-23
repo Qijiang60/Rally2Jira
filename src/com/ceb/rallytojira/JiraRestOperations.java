@@ -35,7 +35,7 @@ public class JiraRestOperations {
 
 	@SuppressWarnings("unchecked")
 	public String createVersion(JsonObject workspace, JsonObject project, JsonObject release)
-			throws IOException {
+			throws Exception {
 		String versionId = findProjectVersionByName(workspace, project, Utils.getJsonObjectName(release));
 		if (Utils.isEmpty(versionId)) {
 			Map<String, String> mapping = Utils.getElementMapping(RallyObject.RELEASE);
@@ -104,7 +104,7 @@ public class JiraRestOperations {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Map<String, Object> getIssueCreateMap(JsonObject workspace, JsonObject project, String versionId, JsonObject rallyIssue, RallyObject workProductType, String jiraIssueType)
-			throws IOException {
+			throws Exception {
 		String projectName = Utils.getJsonObjectName(project);
 		Map<String, String> mapping = Utils.getElementMapping(workProductType);
 		Map<String, Object> postData = new LinkedHashMap<String, Object>();
@@ -126,7 +126,7 @@ public class JiraRestOperations {
 			issueData.put("fixVersions", versions);
 		}
 		for (String key : mapping.keySet()) {
-			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue, project,workspace);
+			Map jiraMap = Utils.getJiraValue(key, mapping.get(key), rallyIssue, project, workspace);
 			if (jiraMap != null) {
 				String topKey = (String) jiraMap.keySet().toArray()[0];
 				if (issueData.containsKey(topKey)) {
@@ -247,12 +247,12 @@ public class JiraRestOperations {
 
 	}
 
-	public void updateIssueAssignee(String jiraKey, String issueKey, String rallyOwnerObjectID) throws Exception {
-		String jiraUsername = Utils.lookupJiraUsername(jiraKey, rallyOwnerObjectID);
+	public void updateIssueAssignee(String jiraKey, String issueKey, String rallyOwnerObjectID, String rallyName) throws Exception {
+		String jiraUsername = Utils.lookupJiraUsername(rallyOwnerObjectID);
 
 		if (Utils.isEmpty(jiraUsername)) {
-			System.err.println(" Rally user: " +
-					rallyOwnerObjectID + ", Jira User " + jiraUsername);
+			System.err.println(" Rally user: " + rallyName + "("
+					+ rallyOwnerObjectID + "), Jira User " + jiraUsername);
 		} else {
 			Map<String, Object> m = new HashMap<String, Object>();
 			m.put("name", jiraUsername);
@@ -371,6 +371,5 @@ public class JiraRestOperations {
 		}
 
 	}
-
 
 }

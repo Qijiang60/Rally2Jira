@@ -14,13 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 
 import net.htmlparser.jericho.Renderer;
 import net.htmlparser.jericho.Source;
 
 import org.apache.log4j.Logger;
 
+import com.ceb.rallytojira.JiraRestOperations;
+import com.ceb.rallytojira.JiraUsers;
+import com.ceb.rallytojira.RallyOperations;
 import com.ceb.rallytojira.domain.RallyObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,8 +33,8 @@ import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
 
 public class Utils {
-	private static Map<String, String> jiraRallyUserMap;
-	private static Map<String, Boolean> userStatusMap;
+	private static Map<String, List<String>> jiraRallyUserMap;
+	// private static Map<String, Boolean> userStatusMap;
 	private static Map<String, Map<String, String>> elementMapping = new HashMap<String, Map<String, String>>();
 	private static Map<String, String> workflowStatusMapping;
 	private static Map<String, String> priorityMapping;
@@ -250,7 +252,7 @@ public class Utils {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	public static Map getJiraValue(String jiraKey, String rallyKey, JsonObject userStory, JsonObject project, JsonObject workspace) throws IOException {
+	public static Map getJiraValue(String jiraKey, String rallyKey, JsonObject userStory, JsonObject project, JsonObject workspace) throws Exception {
 		List<String> values = getValueFromTree(rallyKey, userStory);
 		if (jiraKey.equals("labels[]")) {
 			List<String> labelsWithoutSpaces = new ArrayList<String>();
@@ -263,7 +265,7 @@ public class Utils {
 		if (jiraKey.equals("reporter.name")) {
 			List<String> jiraUser = new ArrayList<String>();
 			for (String s : values) {
-				String lookupJiraUsername = lookupJiraUsername(getJiraProjectKeyForRallyProject(workspace, project), s);
+				String lookupJiraUsername = lookupJiraUsername(s);
 				if (Utils.isNotEmpty(lookupJiraUsername)) {
 					jiraUser.add(lookupJiraUsername);
 				}
@@ -317,45 +319,53 @@ public class Utils {
 		return null;
 	}
 
-	public static String lookupJiraUsername(String jiraKey, String rallyUserObjectID) throws IOException {
+	public static String lookupJiraUsername(String rallyUserObjectID) throws Exception {
 		if (jiraRallyUserMap == null) {
-			createJiraRallyUserMap(jiraKey);
+			createJiraRallyUserMap();
 		}
-		return jiraRallyUserMap.get(rallyUserObjectID);
+		List<String> l = jiraRallyUserMap.get(rallyUserObjectID);
+		if (l != null) {
+			return l.get(3);
+		}
+
+		return null;
 	}
 
-	public static Boolean getUserStatus(String jiraKey, String jiraUsername) throws IOException {
-		if (userStatusMap == null) {
-			createJiraRallyUserMap(jiraKey);
-		}
-		return userStatusMap.get(jiraUsername);
-	}
+	// public static Boolean getUserStatus(String jiraKey, String jiraUsername)
+	// throws IOException {
+	// if (userStatusMap == null) {
+	// createJiraRallyUserMap(jiraKey);
+	// }
+	// return userStatusMap.get(jiraUsername);
+	// }
 
-	private static void createJiraRallyUserMap(String jiraKey) throws FileNotFoundException, IOException {
-		jiraRallyUserMap = new TreeMap<String, String>();
-		userStatusMap = new TreeMap<String, Boolean>();
-		FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" + jiraKey);
-		BufferedReader br = new BufferedReader(fr);
-		String stringRead = br.readLine();
-		int i = 0;
-		while (stringRead != null) {
-			if (i > 0 && Utils.isNotEmpty(stringRead)) {
-				StringTokenizer st = new StringTokenizer(stringRead, "\t");
-				String rallyObjectID = st.nextToken();
-				String rallyDisplayName = st.nextToken();
-				String jiraDisplayName = st.nextToken();
-				String rallyUserName = st.nextToken();
-				String jiraUserName = st.nextToken();
-				String disabled = st.nextToken();
-				String match = st.nextToken();
-				jiraRallyUserMap.put(rallyObjectID, jiraUserName);
-				userStatusMap.put(jiraUserName, Boolean.parseBoolean(disabled));
+	private static void createJiraRallyUserMap() throws FileNotFoundException, IOException {
+		jiraRallyUserMap = JiraUsers.getAllUsersMap();
 
-			}
-			i++;
-			stringRead = br.readLine();
-		}
-		br.close();
+		// userStatusMap = new TreeMap<String, Boolean>();
+		// FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" +
+		// jiraKey);
+		// BufferedReader br = new BufferedReader(fr);
+		// String stringRead = br.readLine();
+		// int i = 0;
+		// while (stringRead != null) {
+		// if (i > 0 && Utils.isNotEmpty(stringRead)) {
+		// StringTokenizer st = new StringTokenizer(stringRead, "\t");
+		// String rallyObjectID = st.nextToken();
+		// String rallyDisplayName = st.nextToken();
+		// String jiraDisplayName = st.nextToken();
+		// String rallyUserName = st.nextToken();
+		// String jiraUserName = st.nextToken();
+		// String disabled = st.nextToken();
+		// String match = st.nextToken();
+		// jiraRallyUserMap.put(rallyObjectID, jiraUserName);
+		// userStatusMap.put(jiraUserName, Boolean.parseBoolean(disabled));
+
+		// }
+		// i++;
+		// stringRead = br.readLine();
+		// }
+		// br.close();
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -447,7 +457,7 @@ public class Utils {
 
 	public static void reinitialize() {
 		jiraRallyUserMap = null;
-		userStatusMap = null;
+		// userStatusMap = null;
 		elementMapping = new HashMap<String, Map<String, String>>();
 		workflowStatusMapping = null;
 		priorityMapping = null;
@@ -501,4 +511,19 @@ public class Utils {
 		}
 		return false;
 	}
+
+	private static boolean isNotJsonNull(JsonObject rallyWorkProduct, String field) {
+		return !isJsonNull(rallyWorkProduct, field);
+	}
+
+	private static boolean isJsonNull(JsonObject rallyWorkProduct, String field) {
+		if (Utils.isEmpty(rallyWorkProduct) || Utils.isEmpty(rallyWorkProduct.get(field)) || rallyWorkProduct.get(field).isJsonNull()) {
+			return true;
+		}
+		if (rallyWorkProduct.get(field).isJsonPrimitive()) {
+			return Utils.isEmpty(rallyWorkProduct.get(field).getAsString());
+		}
+		return false;
+	}
+
 }

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -84,17 +85,32 @@ public class RallyToJiraSetup1 {
 		for (JsonElement teamMember : teamMembers) {
 			allUsers.add(teamMember.getAsJsonObject());
 		}
+		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		for (JsonElement jeTask : tasks) {
+			addOwnerToSet(allUsers, jeTask, project);
+
+		}
+		tasks = null;
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+		for (JsonElement jeDefect : defects) {
+			addOwnerToSet(allUsers, jeDefect, project);
+
+		}
+		defects = null;
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+		for (JsonElement jeUserStory : userStories) {
+			addOwnerToSet(allUsers, jeUserStory, project);
+
+		}
 
 		return allUsers;
 	}
 
-	private static void addOwnerToSet(Set<String> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
+	private static void addOwnerToSet(Set<JsonObject> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
 		JsonObject rallyWorkProduct = jeRallyWorkProduct.getAsJsonObject();
 		if (isNotJsonNull(rallyWorkProduct, "Owner")) {
 			JsonObject owner = rallyWorkProduct.get("Owner").getAsJsonObject();
-			if (isNotJsonNull(owner, "ObjectID")) {
-				allUsers.add(owner.get("ObjectID").getAsString());
-			}
+			allUsers.add(owner);
 		}
 	}
 
