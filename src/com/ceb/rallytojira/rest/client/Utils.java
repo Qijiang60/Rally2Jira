@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,9 +21,7 @@ import net.htmlparser.jericho.Source;
 
 import org.apache.log4j.Logger;
 
-import com.ceb.rallytojira.JiraRestOperations;
 import com.ceb.rallytojira.JiraUsers;
-import com.ceb.rallytojira.RallyOperations;
 import com.ceb.rallytojira.domain.RallyObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,6 +29,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import com.sun.jersey.api.client.ClientResponse;
 
 public class Utils {
@@ -222,7 +222,10 @@ public class Utils {
 		if (response.getStatus() == 204) {
 			return new JsonObject();
 		}
-		return (JsonObject) (new JsonParser()).parse(response.getEntity(String.class));
+		String s = response.getEntity(String.class);
+		JsonReader reader = new JsonReader(new StringReader(s));
+		reader.setLenient(true);
+		return (JsonObject) (new JsonParser()).parse(reader);
 
 	}
 
@@ -298,6 +301,9 @@ public class Utils {
 		if (jiraKey.startsWith("timetracking")) {
 			List<String> timeInHours = new ArrayList<String>();
 			for (String s : values) {
+				if (s.indexOf(".") > -1) {
+					s = s.substring(0, s.indexOf("."));
+				}
 				timeInHours.add(s + "h");
 			}
 			values = timeInHours;
