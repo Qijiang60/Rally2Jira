@@ -321,7 +321,7 @@ public class RallyToJiraSetup3 {
 			String rallyStatus = rallyWorkProduct.get("State").getAsString();
 			System.out.println(rallyStatus);
 			String jiraTransitionId = Utils.getJiraTransitionId(rallyStatus);
-			if (jiraTransitionId.equals("1")) {
+			if ( Utils.isEmpty(jiraTransitionId) || jiraTransitionId.equals("1")) {
 				return false;
 			}
 			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId, rallyStatus);
