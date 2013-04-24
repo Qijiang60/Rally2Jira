@@ -23,15 +23,15 @@ public class RallyToJiraSetup1 {
 	public static boolean createRallyJiraUserMap(JsonObject workspace, JsonObject project, RallyOperations rally, JiraRestOperations jira) throws IOException {
 		String key = Utils.getJiraProjectKeyForRallyProject(workspace, project);
 		File f = new File("mappings/jira_rally_user_mapping_" + key);
-//		if (f.exists()) {
-//			return true;
-//		}
+		// if (f.exists()) {
+		// return true;
+		// }
 		boolean success = true;
 		Set<JsonObject> allUsers = getAllUsers(project, rally);
 		System.out.println(allUsers.size());
-		Map<String, List<String>> allUsersMap = JiraUsers.getAllUsersMap();
+		Map<String, List<String>> allUsersMap = JiraUsers.getAllUsersMap(true);
 
-		BufferedWriter bw = new BufferedWriter(new FileWriter(f, true));
+		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 		bw.write("\nRally ObjectID\tRally DisplayName\tJira DisplayName\tRally UserName\tJira UserName\tDisabled\tMatch");
 		for (JsonObject rallyUserObject : allUsers) {
 			JsonObject rallyUser = rally.getObjectFromRef(rallyUserObject);
@@ -90,6 +90,23 @@ public class RallyToJiraSetup1 {
 			allUsers.add(editor.getAsJsonObject());
 		}
 		allUsers.add(project.get("Owner").getAsJsonObject());
+		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
+		for (JsonElement jeTask : tasks) {
+			addOwnerToSet(allUsers, jeTask, project);
+
+		}
+		tasks = null;
+		JsonArray defects = rally.getRallyObjectsForProject(project, RallyObject.DEFECT);
+		for (JsonElement jeDefect : defects) {
+			addOwnerToSet(allUsers, jeDefect, project);
+
+		}
+		defects = null;
+		JsonArray userStories = rally.getRallyObjectsForProject(project, RallyObject.USER_STORY);
+		for (JsonElement jeUserStory : userStories) {
+			addOwnerToSet(allUsers, jeUserStory, project);
+
+		}
 
 		return allUsers;
 	}

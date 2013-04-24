@@ -340,7 +340,7 @@ public class Utils {
 	// }
 
 	private static void createJiraRallyUserMap() throws FileNotFoundException, IOException {
-		jiraRallyUserMap = JiraUsers.getAllUsersMap();
+		jiraRallyUserMap = JiraUsers.getAllUsersMap(false);
 
 		// userStatusMap = new TreeMap<String, Boolean>();
 		// FileReader fr = new FileReader("mappings/jira_rally_user_mapping_" +

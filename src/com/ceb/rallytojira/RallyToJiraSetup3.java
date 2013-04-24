@@ -310,6 +310,7 @@ public class RallyToJiraSetup3 {
 	private boolean processStatus(JsonObject project, JsonObject rallyWorkProduct, JsonObject jiraIssue) throws Exception {
 		if (isNotJsonNull(rallyWorkProduct, "ScheduleState")) {
 			String rallyStatus = rallyWorkProduct.get("ScheduleState").getAsString();
+			System.out.println(rallyStatus);
 			String jiraTransitionId = Utils.getJiraTransitionId(rallyStatus);
 			if ("1".equals(jiraTransitionId)) {
 				return false;
@@ -318,6 +319,7 @@ public class RallyToJiraSetup3 {
 		}
 		if (isNotJsonNull(rallyWorkProduct, "State")) {
 			String rallyStatus = rallyWorkProduct.get("State").getAsString();
+			System.out.println(rallyStatus);
 			String jiraTransitionId = Utils.getJiraTransitionId(rallyStatus);
 			if (jiraTransitionId.equals("1")) {
 				return false;

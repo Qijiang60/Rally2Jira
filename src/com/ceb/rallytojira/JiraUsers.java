@@ -90,8 +90,8 @@ public class JiraUsers {
 
 	}
 
-	public static Map<String, List<String>> getAllUsersMap() throws IOException {
-		if (allUserMap == null) {
+	public static Map<String, List<String>> getAllUsersMap(boolean force) throws IOException {
+		if (allUserMap == null || force) {
 			allUserMap = new HashMap<String, List<String>>();
 			File dir = new File(FILE_DIR);
 			File[] list = dir.listFiles(filter);
