@@ -1,0 +1,15 @@
+JIRA,Rally
+NULL,ObjectID
+NULL,FormattedID
+NULL,Name
+NULL,Objective
+NULL,WorkProduct
+NULL,WorkProduct.FormattedID
+NULL,PreConditions
+NULL,ValidationInput
+NULL,ValidationExpectedResult
+NULL,PostConditions
+NULL,Package
+NULL,LastVerdict
+NULL,Notes
+NULL,Description

@@ -22,9 +22,9 @@ import com.rallydev.rest.util.QueryFilter;
 public class RallyJsonClient {
 	RallyRestApi api;
 	JsonObject loggedInUserProfile;
-	String username = "hgarwal@executiveboard.com";
+	//String username = "hgarwal@executiveboard.com";
 
-	// String username = "hagarwal@executiveboard.com";
+	String username = "hagarwal@executiveboard.com";
 
 	public RallyJsonClient() throws URISyntaxException, IOException {
 		login();

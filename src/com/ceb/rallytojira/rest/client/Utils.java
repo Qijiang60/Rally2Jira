@@ -201,21 +201,32 @@ public class Utils {
 	public static String mapToJsonString(Map<String, Object> data) {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 		String s = gson.toJson(data);
-		s = removeStyleTags(s);
-		Source htmlSource = new Source(s);
-		Renderer r = htmlSource.getRenderer();
-		r.setMaxLineLength(5000);
-		s = r.toString();
-		s = s.replace("\r\n", "\\n");
-		s = s.replace("\n", "\\n");
-		s = s.replace("\r", "\\n");
-		s = s.replace("\t", "\\t");
+		s = clean(s, true);
 		return s;
 	}
 
-	private static String removeStyleTags(String s) {
+	public static String removeStyleTags(String s) {
 		return s.replaceAll("( style=\\\\\\\"[^\\\"]*\\\\\\\")", "");
 
+	}
+
+	public static String clean(String s) {
+		return clean(s, false);
+	}
+
+	public static String clean(String s, boolean removeNewLine) {
+		s = removeStyleTags(s);
+		Source htmlSource = new Source(s);
+		Renderer r = htmlSource.getRenderer();
+		r.setMaxLineLength(100000);
+		s = r.toString();
+		if (removeNewLine) {
+			s = s.replace("\r\n", "\\n");
+			s = s.replace("\n", "\\n");
+			s = s.replace("\r", "\\n");
+			s = s.replace("\t", "\\t");
+		}
+		return s;
 	}
 
 	public static JsonObject jerseyRepsonseToJsonObject(ClientResponse response) {

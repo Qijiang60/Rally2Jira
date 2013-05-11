@@ -25,7 +25,6 @@ public class RallyToJiraSetup3 {
 	int counter = 0;
 	int limit = 30000000;
 	int progress = 0;
-	public static String PROJECT = "Next Generation Web";
 
 	public RallyToJiraSetup3() throws Exception {
 		rally = new RallyOperations();
@@ -53,58 +52,20 @@ public class RallyToJiraSetup3 {
 				String key = Utils.getKeyForWorkspaceAndProject(workspace, project);
 				if (projectMapping.containsKey(key)) {
 					System.out.println(key);
-					rally.updateDefaultWorkspace(workspace, project);
-					createProject(workspace, project);
-					// RallyToJiraSetup1.createRallyJiraUserMap(workspace,
-					// project, rally, jira);
-					// RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace,
-					// project));
-					createReleases(workspace, project);
-					createTasks(workspace, project);
-					createDefects(workspace, project);
-					createUserStories(workspace, project);
+					 rally.updateDefaultWorkspace(workspace, project);
+					 createProject(workspace, project);
+					 RallyToJiraSetup1.createRallyJiraUserMap(workspace,
+					 project, rally, jira);
+					 RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace,
+					 project));
+//					createReleases(workspace, project);
+//					createTasks(workspace, project);
+//					createDefects(workspace, project);
+//					createUserStories(workspace, project);
 				}
 			}
 		}
 	}
-
-	// JsonObject project =
-	// rally.getProjectByName(PROJECT).get(0).getAsJsonObject();
-	// deleteDuplicates(project);
-	// createReleases(project);
-	//
-	// String[] projectNames = new String[] { "EXBD",
-	// "LE Move to CWS Integrated Backend", "Search Services",
-	// "CMS Project", "Discussions",
-	// "Iconoculture", "iMaps", "Infrastructure", "Middle Market - RTE",
-	// "NGW Registration and Peer Networking", "SFDC", "Site Catalyst",
-	// "Test Automation", "Test Automation - Web V2",
-	// "Test Automation - Workspace", "Web Expansion", "Workspace",
-	// "Next Generation Web" };
-	// String[] projectNames = new String[] { "Site Catalyst",
-	// "Test Automation", "Test Automation - Web V2",
-	// "Test Automation - Workspace", "Web Expansion", "Workspace",
-	// "Next Generation Web" };
-
-	// String[] projectNames = new String[] { "Support/Development" };
-	// for (String projectName : projectNames) {
-	// JsonObject project =
-	// rally.getProjectByName(projectName).get(0).getAsJsonObject();
-	// Utils.reinitialize();
-	// System.out.println(projectName + ", " +
-	// Utils.getJsonObjectName(project) + ", " +
-	// Utils.getJiraProjectNameForRallyProject(project));
-	// try {
-	// while (deleteAllIssuesInJira(project)) {
-	// System.out.println("deleting ...");
-	// }
-	// } catch (Exception e) {
-	//
-	// }
-	// deleteDuplicates(project);
-	// createReleases(project);
-
-	// }
 
 	private void createProject(JsonObject workspace, JsonObject project) throws IOException {
 		jiraSoap.createProject(workspace, project);
@@ -321,7 +282,7 @@ public class RallyToJiraSetup3 {
 			String rallyStatus = rallyWorkProduct.get("State").getAsString();
 			System.out.println(rallyStatus);
 			String jiraTransitionId = Utils.getJiraTransitionId(rallyStatus);
-			if ( Utils.isEmpty(jiraTransitionId) || jiraTransitionId.equals("1")) {
+			if (Utils.isEmpty(jiraTransitionId) || jiraTransitionId.equals("1")) {
 				return false;
 			}
 			jira.updateWorkflowStatus(jiraIssue.get("key").getAsString(), jiraTransitionId, rallyStatus);

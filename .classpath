@@ -26,5 +26,6 @@
 	<classpathentry kind="lib" path="lib/jaxrpc-api-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-discovery-0.5.jar"/>
 	<classpathentry kind="lib" path="lib/wsdl4j-1.6.3.jar"/>
+	<classpathentry kind="lib" path="lib/poi-3.9-20121203.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
