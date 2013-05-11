@@ -97,7 +97,7 @@ public class JiraRestOperations {
 		JsonObject jResponse = Utils.jerseyRepsonseToJsonObject(response);
 		if (jResponse.get("errorMessages") != null) {
 			System.out.println(jResponse);
-			throw new Exception("error");
+			throw new Exception(jResponse.toString());
 		}
 		return jResponse;
 	}
@@ -257,7 +257,15 @@ public class JiraRestOperations {
 			Map<String, Object> m = new HashMap<String, Object>();
 			m.put("name", jiraUsername);
 			ClientResponse response = api.doPut("/rest/api/latest/issue/" + issueKey + "/assignee", Utils.mapToJsonString(m));
-			processJiraResponse(response);
+			try {
+				processJiraResponse(response);
+			} catch (Exception e) {
+				if (e.getMessage().contains("cannot be assigned")) {
+					addUserToProjectRoles(jiraKey, jiraUsername, new String[] { "Developers", "Users" });
+					updateIssueAssignee(jiraKey, issueKey, rallyOwnerObjectID, rallyName);
+
+				}
+			}
 		}
 	}
 
