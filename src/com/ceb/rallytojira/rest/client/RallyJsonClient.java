@@ -39,7 +39,7 @@ public class RallyJsonClient {
 		}
 		api = new RallyRestApi(new URI("https://rally1.rallydev.com"),
 				username, "harshag12");
-		api.setWsapiVersion("1.41");
+		api.setWsapiVersion("1.43");
 
 		List<String> dataElements = new ArrayList<String>();
 		dataElements.add("UserProfile");
