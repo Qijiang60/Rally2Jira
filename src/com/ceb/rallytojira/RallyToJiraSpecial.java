@@ -16,7 +16,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class RallyToJiraBacklogOnly {
+public class RallyToJiraSpecial {
 
 	RallyOperations rally;
 	JiraRestOperations jira;
@@ -26,7 +26,7 @@ public class RallyToJiraBacklogOnly {
 	int limit = 30000000;
 	int progress = 0;
 
-	public RallyToJiraBacklogOnly() throws Exception {
+	public RallyToJiraSpecial() throws Exception {
 		rally = new RallyOperations();
 		jira = new JiraRestOperations();
 		jiraSoap = new JiraSoapOperations();
@@ -34,7 +34,7 @@ public class RallyToJiraBacklogOnly {
 
 	public static void main(String[] args) throws URISyntaxException,
 			Exception {
-		RallyToJiraBacklogOnly rallyToJira = new RallyToJiraBacklogOnly();
+		RallyToJiraSpecial rallyToJira = new RallyToJiraSpecial();
 		rallyToJira.process();
 
 	}
@@ -56,7 +56,7 @@ public class RallyToJiraBacklogOnly {
 					// createProject(workspace, project);
 					// RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace,
 					// project));
-					//createUserStories(workspace, project);
+					createUserStories(workspace, project);
 					createDefects(workspace, project);
 				}
 			}
@@ -75,11 +75,11 @@ public class RallyToJiraBacklogOnly {
 		for (JsonElement jeDefect : defects) {
 			System.out.println("**DEFECT " + progress++ + " of " + totalDefects + " *************************************");
 			JsonObject defect = jeDefect.getAsJsonObject();
-			if (!defect.get("Release").isJsonNull() || defect.get("State").getAsString().equals("Closed")) {
+			if (defect.get("State").getAsString().equals("Closed")) {
 				continue;
 			}
 			JsonObject jiraDefect = findOrCreateIssueInJiraForDefect(workspace, project, defect.get("FormattedID").getAsString());
-			JsonElement tasksObj = createTasks(workspace, project, defect);
+			createTasks(workspace, project, defect);
 		}
 	}
 
@@ -90,14 +90,17 @@ public class RallyToJiraBacklogOnly {
 		for (JsonElement jeUserStory : userStories) {
 			System.out.println("**USER STORY " + progress++ + " of " + totalUserStories + " *************************************");
 			JsonObject userStory = jeUserStory.getAsJsonObject();
-			if (!userStory.get("Release").isJsonNull()) {
-				System.out.println(userStory.get("Release"));
-				continue;
+			if (userStory.get("Iteration").isJsonNull()
+					|| userStory.get("Iteration").getAsString().equals("1.16")
+					|| userStory.get("Iteration").getAsString().equals("1.17")
+					|| userStory.get("Iteration").getAsString().equals("1.18")
+					|| userStory.get("Iteration").getAsString().equals("On Hold")
+					|| userStory.get("Iteration").getAsString().equals("Transfer to Columbus")) {
+
+				findOrCreateIssueInJiraForUserStory(workspace, project, userStory.get("FormattedID").getAsString());
+
+				createTasks(workspace, project, userStory);
 			}
-
-			findOrCreateIssueInJiraForUserStory(workspace, project, userStory.get("FormattedID").getAsString());
-
-			JsonElement tasksObj = createTasks(workspace, project, userStory);
 
 		}
 	}
