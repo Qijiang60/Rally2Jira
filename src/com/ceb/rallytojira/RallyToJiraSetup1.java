@@ -6,11 +6,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.client.Utils;
@@ -27,14 +27,14 @@ public class RallyToJiraSetup1 {
 		// return true;
 		// }
 		boolean success = true;
-		Set<JsonObject> allUsers = getAllUsers(project, rally);
+		Set<String> allUsers = getAllUsers(project, rally);
 		System.out.println(allUsers.size());
 		Map<String, List<String>> allUsersMap = JiraUsers.getAllUsersMap(true);
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 		bw.write("\nRally ObjectID\tRally DisplayName\tJira DisplayName\tRally UserName\tJira UserName\tDisabled\tMatch");
-		for (JsonObject rallyUserObject : allUsers) {
-			JsonObject rallyUser = rally.getObjectFromRef(rallyUserObject);
+		for (String rallyUserObjectRef : allUsers) {
+			JsonObject rallyUser = rally.getObjectFromRef(rallyUserObjectRef);
 			if (Utils.isEmpty(rallyUser)) {
 				continue;
 			}
@@ -78,18 +78,18 @@ public class RallyToJiraSetup1 {
 		return success;
 	}
 
-	private static Set<JsonObject> getAllUsers(JsonObject project, RallyOperations rally) throws IOException {
+	private static Set<String> getAllUsers(JsonObject project, RallyOperations rally) throws IOException {
 		JsonObject proj = rally.getObjectFromRef(project);
 		JsonArray teamMembers = proj.get("TeamMembers").getAsJsonArray();
-		Set<JsonObject> allUsers = new HashSet<JsonObject>();
+		Set<String> allUsers = new TreeSet<String>();
 		for (JsonElement teamMember : teamMembers) {
-			allUsers.add(teamMember.getAsJsonObject());
+			allUsers.add(teamMember.getAsJsonObject().get("_ref").getAsString());
 		}
 		JsonArray editors = proj.get("Editors").getAsJsonArray();
 		for (JsonElement editor : editors) {
-			allUsers.add(editor.getAsJsonObject());
+			allUsers.add(editor.getAsJsonObject().get("_ref").getAsString());
 		}
-		allUsers.add(project.get("Owner").getAsJsonObject());
+		allUsers.add(project.get("Owner").getAsJsonObject().get("_ref").getAsString());
 		JsonArray tasks = rally.getRallyObjectsForProject(project, RallyObject.TASK);
 		for (JsonElement jeTask : tasks) {
 			addOwnerToSet(allUsers, jeTask, project);
@@ -111,11 +111,11 @@ public class RallyToJiraSetup1 {
 		return allUsers;
 	}
 
-	private static void addOwnerToSet(Set<JsonObject> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
+	private static void addOwnerToSet(Set<String> allUsers, JsonElement jeRallyWorkProduct, JsonObject project) throws IOException {
 		JsonObject rallyWorkProduct = jeRallyWorkProduct.getAsJsonObject();
 		if (isNotJsonNull(rallyWorkProduct, "Owner")) {
 			JsonObject owner = rallyWorkProduct.get("Owner").getAsJsonObject();
-			allUsers.add(owner);
+			allUsers.add(owner.get("_ref").getAsString());
 		}
 	}
 

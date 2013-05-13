@@ -52,15 +52,15 @@ public class RallyToJiraSetup3 {
 				String key = Utils.getKeyForWorkspaceAndProject(workspace, project);
 				if (projectMapping.containsKey(key)) {
 					System.out.println(key);
-					 rally.updateDefaultWorkspace(workspace, project);
-//					 createProject(workspace, project);
-//					 RallyToJiraSetup1.createRallyJiraUserMap(workspace,
-//					 project, rally, jira);
-//					 RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace,
-//					 project));
+					rally.updateDefaultWorkspace(workspace, project);
+					createProject(workspace, project);
+					// RallyToJiraSetup1.createRallyJiraUserMap(workspace,
+					// project, rally, jira);
+//					RallyToJiraSetup1.addUsersToProjectRole(Utils.getJiraProjectKeyForRallyProject(workspace,
+//							project));
 					createReleases(workspace, project);
 					createTasks(workspace, project);
-					createDefects(workspace, project);
+//					createDefects(workspace, project);
 					createUserStories(workspace, project);
 				}
 			}

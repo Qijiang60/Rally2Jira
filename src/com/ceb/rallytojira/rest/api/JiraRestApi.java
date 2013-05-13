@@ -23,7 +23,7 @@ public class JiraRestApi {
 		this.server = server;
 
 		auth = new String(Base64.encode(username + ":" + password));
-		authRally = new String(Base64.encode("hgarwal@executiveboard.com:harshag12"));
+		authRally = new String(Base64.encode("hagarwal@executiveboard.com:harshag12"));
 		client = Client.create();
 	}
 

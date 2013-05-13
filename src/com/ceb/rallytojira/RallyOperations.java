@@ -48,7 +48,7 @@ public class RallyOperations {
 	// }
 	//
 
-	public JsonObject findRallyObjectByObjectID( RallyObject objectType, String objectID) throws IOException {
+	public JsonObject findRallyObjectByObjectID(RallyObject objectType, String objectID) throws IOException {
 		List<String> dataElements = Utils.elementsTobeFetched(objectType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("ObjectID", objectID);
@@ -84,11 +84,22 @@ public class RallyOperations {
 		return response.getObject();
 	}
 
+	public JsonObject getObjectFromRef(String ref) throws IOException {
+		String url = ref;
+		GetRequest request = new GetRequest(url);
+		request.addParam("fetch", "true");
+		GetResponse response = client.getApi().get(request);
+		return response.getObject();
+	}
+
 	public JsonArray getRallyObjectsForProject(JsonObject project, RallyObject objectType) throws IOException {
 
 		List<String> dataElements = Utils.elementsTobeFetched(objectType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("Project.ObjectID", project.get("ObjectID").getAsString());
+		if (!objectType.equals(RallyObject.RELEASE)) {
+			//filter.put("Release.ObjectID", "11422973506");
+		}
 		return client.searchObjects(objectType, filter, dataElements);
 	}
 

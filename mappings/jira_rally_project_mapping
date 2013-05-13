@@ -13,4 +13,15 @@ Workspace,Rally Project Name,Jira Project Name,Jira Project Key,Releases,User
 //RED,3.0+,RED,RED,All,Y
 //Unified Benchmarking Platform,Unified Benchmarking Platform,Unified Benchmarking Platform,UBP,All,Y
 //Workspace 1,SFDC,SFDC,SFDC,All,Y
-Workspace 1,Middle Market - RTE,Middle Market RTE and Enhancements,MMKT,All,Y
+//Workspace 1,Middle Market - RTE,Middle Market RTE and Enhancements,MMKT,All,Y
+//Workspace 1,Iconoculture,Iconoculture,TSTA,All,Y
+//Workspace 1,Infrastructure,Infrastructure,TSTA,All,Y
+//Workspace 1,Test Automation,Test Automation,TSTA,All,Y
+//Workspace 1,Test Automation - Web V2,Test Automation - Web V2,TSTA,All,Y
+//Workspace 1,Test Automation - Workspace,Test Automation - Workspace,TSTA,All,Y
+//Workspace 1,Discussions,Discussions,DISC,All,Y
+//Workspace 1,iMaps,CEB MAPS,MAPS,All,Y
+Workspace 1,Next Generation Web,Next Generation Web,NGW,Release 13.4|,Y
+//Workspace 1,EXBD,EXBD,EXBD,All,Y
+//Workspace 1,Workspace,Workspace,WKSP,All,Y
+//Workspace 2,Technology Roadmap Builder,Technology Roadmap Builder,TRB,All,Y
