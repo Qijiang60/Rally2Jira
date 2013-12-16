@@ -8,6 +8,7 @@ import org.swift.common.soap.jira.JiraSoapService;
 import org.swift.common.soap.jira.RemoteAuthenticationException;
 import org.swift.common.soap.jira.RemoteException;
 import org.swift.common.soap.jira.RemoteGroup;
+import org.swift.common.soap.jira.RemoteIssue;
 import org.swift.common.soap.jira.RemotePermissionException;
 import org.swift.common.soap.jira.RemoteProject;
 import org.swift.common.soap.jira.RemoteUser;
@@ -69,12 +70,17 @@ public class JiraSoapOperations {
 		String jiraName = Utils.getJiraProjectNameForRallyProject(workspace, project);
 		JiraSoapService soapy = api.getfJiraSoapService();
 		String token = api.getfToken();
-		try{
-		RemoteProject jiraProject = soapy.getProjectByKey(token, jiraKey);
+		try {
+			RemoteProject jiraProject = soapy.getProjectByKey(token, jiraKey);
 		} catch (Exception e) {
 			soapy.createProject(token, jiraKey, jiraName, "", "", "rally_jira_migration", null, null, null);
 		}
-		
 
 	}
+
+	public JiraSoapApi getApi() {
+		return api;
+	}
+
+	
 }

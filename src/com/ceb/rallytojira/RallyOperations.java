@@ -97,9 +97,6 @@ public class RallyOperations {
 		List<String> dataElements = Utils.elementsTobeFetched(objectType);
 		Map<String, String> filter = new LinkedHashMap<String, String>();
 		filter.put("Project.ObjectID", project.get("ObjectID").getAsString());
-		if (!objectType.equals(RallyObject.RELEASE)) {
-			//filter.put("Release.ObjectID", "11422973506");
-		}
 		return client.searchObjects(objectType, filter, dataElements);
 	}
 

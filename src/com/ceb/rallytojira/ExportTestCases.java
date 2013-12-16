@@ -54,22 +54,26 @@ public class ExportTestCases {
 			for (JsonElement projEle : projects) {
 				JsonObject project = rally.getObjectFromRef(projEle);
 				String key = Utils.getKeyForWorkspaceAndProject(workspace, project);
-				if (projectMapping.containsKey(key)) {
-					System.out.println(key);
-					rally.updateDefaultWorkspace(workspace, project);
-					exportTestCases(workspace, project);
-				}
+				// if (projectMapping.containsKey(key)) {
+				System.out.println(key);
+				rally.updateDefaultWorkspace(workspace, project);
+				exportTestCases(workspace, project, key);
+				// }
 			}
 		}
 	}
 
-	private void exportTestCases(JsonObject workspace, JsonObject project) throws Exception {
+	private void exportTestCases(JsonObject workspace, JsonObject project, String keyFile) throws Exception {
+		keyFile = keyFile.replaceAll("\\\\", "_");
+		keyFile = keyFile.replaceAll("/", "_");
+
+		File f = new File("C:\\CLCTestCases\\" + keyFile + ".xls");
+		if (f.exists()) {
+			return;
+		}
 		List<String> elementsToBeFetched = Utils.elementsTobeFetched(RallyObject.TEST_CASE);
 		JsonArray testCases = rally.getRallyObjectsForProject(project, RallyObject.TEST_CASE);
-		// JsonObject userStory =
-		// rally.findRallyObjectByObjectID(RallyObject.USER_STORY,
-		// "4865381569");
-		// JsonArray testCases = userStory.get("TestCases").getAsJsonArray();
+		int size = testCases.size();
 		System.out.println(testCases.size());
 		HSSFWorkbook workbook = new HSSFWorkbook();
 		HSSFSheet sheet = workbook.createSheet("Test Cases");
@@ -86,13 +90,11 @@ public class ExportTestCases {
 			}
 		}
 		for (JsonElement testCaseEle : testCases) {
-			// if (rownum == 10) {
-			// break;
-			// }
+
 			JsonObject testCase = rally.findRallyObjectByObjectID(RallyObject.TEST_CASE, testCaseEle.getAsJsonObject().get("ObjectID").getAsString());
 			row = sheet.createRow(rownum++);
 			cellnum = 0;
-			System.out.println(rownum);
+			System.out.println(rownum + "/" + size);
 			for (String key : elementsToBeFetched) {
 				JsonElement valueE = testCase.get(key);
 
@@ -127,7 +129,7 @@ public class ExportTestCases {
 			}
 		}
 		try {
-			FileOutputStream out = new FileOutputStream(new File("C:\\new.xls"));
+			FileOutputStream out = new FileOutputStream(f);
 			workbook.write(out);
 			out.close();
 			System.out.println("Excel written successfully..");

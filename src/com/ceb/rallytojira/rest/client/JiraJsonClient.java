@@ -9,12 +9,12 @@ import com.ceb.rallytojira.rest.api.JiraSoapApi;
 public class JiraJsonClient {
 
 	public JiraRestApi getJiraRestApi() throws URISyntaxException {
-		return new JiraRestApi(new URI("https://206.16.231.96"),
+		return new JiraRestApi(new URI("https://agiletool.executiveboard.com"),
 				"rally_jira_migration", "rally_jira_migration");
 	}
 
 	public JiraSoapApi getJiraSoapApi() throws Exception {
-		return new JiraSoapApi(new URI("https://206.16.231.96"),
+		return new JiraSoapApi(new URI("https://agiletool.executiveboard.com"),
 				"rally_jira_migration", "rally_jira_migration");
 	}
 }

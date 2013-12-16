@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.ceb.rallytojira.domain.RallyObject;
 import com.ceb.rallytojira.rest.api.JiraRestApi;
@@ -380,4 +382,50 @@ public class JiraRestOperations {
 
 	}
 
+	public void addLink(String parentKey, String linkKey) throws Exception {
+
+		String json = "{" +
+				"\"type\": {" +
+				"\"name\": \"Relates\"" +
+				"}," +
+				"\"inwardIssue\": {" +
+				"\"key\": \"" + linkKey + "\"" +
+				"}," +
+				"\"outwardIssue\": {" +
+				"\"key\": \"" + parentKey + "\"" +
+				"}" +
+				"}";
+		System.out.println(json);
+		ClientResponse response = api.doPost("/rest/api/latest/issueLink", json);
+		// processJiraResponse(response);
+	}
+
+	public Set<String> searchIssues(String jql) throws IOException {
+		int startIndex = 1;
+		Set<String> issueKeys = new TreeSet<String>();
+
+		for (int i = 0; i < 5; i++) {
+			// String url = "/rest/api/latest/search?jql=" + jql +
+			// "&%20ORDER%20BY%20key%20ASC&startIndex=" + (startIndex + i *
+			// 1000);
+			Map m = new HashMap();
+			m.put("jql", jql);
+			m.put("startAt", i * 1000+1);
+			m.put("maxResults", 5000);
+			m.put("fields", new String[] { "key" });
+
+			JsonObject issuesObj = Utils.jerseyRepsonseToJsonObject(api.doPost("/rest/api/latest/search", Utils.mapToJsonString(m)));
+			JsonArray issues = issuesObj.getAsJsonArray("issues");
+			System.out.println(issues.size());
+			for (JsonElement issue : issues) {
+				String issueKey = issue.getAsJsonObject().get("key").getAsString();
+				System.out.println(issueKey);
+				issueKeys.add(issueKey);
+			}
+			System.out.println(issueKeys.size());
+
+		}
+		return issueKeys;
+
+	}
 }

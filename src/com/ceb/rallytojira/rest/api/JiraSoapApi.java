@@ -31,7 +31,5 @@ public class JiraSoapApi {
 	public String getfToken() {
 		return fToken;
 	}
-	
-	
 
 }
