@@ -38,6 +38,17 @@ public class JiraRestApi {
 
 	}
 
+	public ClientResponse doGetAbsolute(String url) {
+		System.out.println("doGet: " + url);
+		WebResource webResource = client.resource(url);
+		ClientResponse response = webResource
+				.header("Authorization", "Basic " + auth)
+				.type("application/json").accept("application/json")
+				.get(ClientResponse.class);
+		return response;
+
+	}
+
 	public ClientResponse doPost(String url, String data) {
 		System.out.println("doPost: " + server + url);
 		WebResource webResource = client.resource(server + url);

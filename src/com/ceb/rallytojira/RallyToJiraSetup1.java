@@ -49,28 +49,7 @@ public class RallyToJiraSetup1 {
 				bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + disabled
 						+ "\t" + match);
 			} else {
-				String rallyUserName = rallyUser.get("UserName").getAsString();
-				String rallyLastname = isNotJsonNull(rallyUser, "LastName") ? rallyUser.get("LastName").getAsString() : "";
-				String rallyFirstname = isNotJsonNull(rallyUser, "FirstName") ? rallyUser.get("FirstName").getAsString() : "";
-				String jiraSearch = rallyLastname + ", " + rallyFirstname;
-				try {
-					JsonObject jiraUser = jira.findJiraUser(jiraSearch);
-					String jiraDisplayName = isNotJsonNull(jiraUser, "displayName") ? jiraUser.get("displayName").getAsString() : "";
-					String jiraUserName = jiraUser.get("name").getAsString();
-					if (jiraSearch.equals(jiraDisplayName)) {
-						bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
-								+ "\tY");
-					} else {
-						bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + jiraDisplayName + "\t" + rallyUserName + "\t" + jiraUserName + "\t" + rallyUser.get("Disabled").getAsString()
-								+ "\tN");
-					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
-					bw.write("\n" + rallyUserObjectID + "\t" + jiraSearch + "\t" + "<?jiraDisplayName?>" + "\t" + rallyUserName + "\t" + "<?jiraUserName?>" + "\t"
-							+ rallyUser.get("Disabled").getAsString() + "\tN");
-					success = false;
-				}
-				bw.flush();
+				
 			}
 
 		}

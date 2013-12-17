@@ -271,22 +271,11 @@ public class JiraRestOperations {
 		}
 	}
 
-	public JsonObject findJiraUser(String searchString) throws Exception {
-		ClientResponse response = api.doGet("/rest/api/latest/user/search?username=" + URLEncoder.encode(searchString, "UTF-8"));
+	public JsonElement callJira(String url) throws Exception {
+		ClientResponse response = api.doGetAbsolute(url);
 		JsonElement jElement = (new JsonParser()).parse(response.getEntity(String.class));
-		if (jElement.isJsonObject()) {
-			return jElement.getAsJsonObject();
-		} else {
-			if (jElement.isJsonArray()) {
-				JsonArray ja = jElement.getAsJsonArray();
-				if (ja.size() == 1) {
-					return ja.get(0).getAsJsonObject();
-				} else {
-					throw new Exception(ja.toString());
-				}
-			}
-		}
-		return null;
+		System.out.println(jElement);
+		return jElement;
 	}
 
 	public void updateDatesInDatabase(String projectName, String databaseId, JsonObject rallyWorkProduct, boolean stateChanged) throws Exception {
