@@ -3,7 +3,6 @@ package com.ceb.rallytojira;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -26,8 +25,16 @@ public class JiraRestOperations {
 	JiraRestApi api;
 
 	public JiraRestOperations() throws URISyntaxException {
+		this(false);
+	}
+
+	public JiraRestOperations(boolean b) throws URISyntaxException {
 		JiraJsonClient client = new JiraJsonClient();
-		api = client.getJiraRestApi();
+		if (b) {
+			api = client.getInnotasRestApi();
+		} else {
+			api = client.getJiraRestApi();
+		}
 	}
 
 	public ClientResponse getAllProjects() throws IOException {
@@ -274,7 +281,7 @@ public class JiraRestOperations {
 	public JsonElement callJira(String url) throws Exception {
 		ClientResponse response = api.doGetAbsolute(url);
 		JsonElement jElement = (new JsonParser()).parse(response.getEntity(String.class));
-		System.out.println(jElement);
+		//System.out.println(jElement);
 		return jElement;
 	}
 
@@ -399,7 +406,7 @@ public class JiraRestOperations {
 			// 1000);
 			Map m = new HashMap();
 			m.put("jql", jql);
-			m.put("startAt", i * 1000+1);
+			m.put("startAt", i * 1000 + 1);
 			m.put("maxResults", 5000);
 			m.put("fields", new String[] { "key" });
 
