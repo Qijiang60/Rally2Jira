@@ -10,7 +10,7 @@ public class JiraJsonClient {
 
 	public JiraRestApi getJiraRestApi() throws URISyntaxException {
 		return new JiraRestApi(new URI("https://agiletool.executiveboard.com"),
-				"hagarwal", "iamOkie#903");
+				"hagarwal", "iamOkie#904");
 	}
 
 	public JiraSoapApi getJiraSoapApi() throws Exception {

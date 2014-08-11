@@ -27,6 +27,7 @@ public class MainInnotasMissingProjects {
 			innotasProjects.add(j.getAsJsonObject().get("key").getAsString());
 		}
 		System.out.println(innotasProjects.size());
+		System.out.println("*******************************************************************************************************************");
 		for(String s : allProjects){
 			if(!innotasProjects.contains(s)){
 				System.out.println(s);
