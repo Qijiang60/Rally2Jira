@@ -18,7 +18,6 @@ public class MainInnotasMissingProjects {
 		for (JsonElement j : a) {
 			String pro = j.getAsJsonObject().get("key").getAsString();
 			allProjects.add(pro);
-			System.out.println(pro);
 		}
 		System.out.println(allProjects.size());
 		System.out.println("*******************************************************************************************************************");
@@ -29,6 +28,9 @@ public class MainInnotasMissingProjects {
 			innotasProjects.add(j.getAsJsonObject().get("key").getAsString());
 		}
 		System.out.println(innotasProjects.size());
+		for(String s : allProjects){
+			System.out.println(s);
+		}
 		System.out.println("*******************************************************************************************************************");
 		for(String s : allProjects){
 			if(!innotasProjects.contains(s)){
