@@ -16,7 +16,9 @@ public class MainInnotasMissingProjects {
 		JsonElement xje = jira.callJira("https://agiletool.executiveboard.com/rest/api/latest/project");
 		JsonArray a = xje.getAsJsonArray();
 		for (JsonElement j : a) {
-			allProjects.add(j.getAsJsonObject().get("key").getAsString());
+			String pro = j.getAsJsonObject().get("key").getAsString();
+			allProjects.add(pro);
+			System.out.println(pro);
 		}
 		System.out.println(allProjects.size());
 		System.out.println("*******************************************************************************************************************");

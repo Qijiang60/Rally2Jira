@@ -280,6 +280,7 @@ public class JiraRestOperations {
 
 	public JsonElement callJira(String url) throws Exception {
 		ClientResponse response = api.doGetAbsolute(url);
+	//	System.out.println(response.getEntity(String.class));
 		JsonElement jElement = (new JsonParser()).parse(response.getEntity(String.class));
 		//System.out.println(jElement);
 		return jElement;
