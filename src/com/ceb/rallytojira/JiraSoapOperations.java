@@ -40,7 +40,7 @@ public class JiraSoapOperations {
 		}
 	}
 
-	private RemoteGroup getGroup(String groupName) throws RemotePermissionException, RemoteValidationException, RemoteAuthenticationException, RemoteException, java.rmi.RemoteException {
+	public RemoteGroup getGroup(String groupName) throws RemotePermissionException, RemoteValidationException, RemoteAuthenticationException, RemoteException, java.rmi.RemoteException {
 		if (groups.containsKey(groupName)) {
 			return groups.get(groupName);
 		}

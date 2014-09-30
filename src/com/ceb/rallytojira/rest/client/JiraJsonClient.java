@@ -15,7 +15,7 @@ public class JiraJsonClient {
 
 	public JiraSoapApi getJiraSoapApi() throws Exception {
 		return new JiraSoapApi(new URI("https://agiletool.executiveboard.com"),
-				"rally_jira_migration", "rally_jira_migration");
+				"hagarwal", "iamOkie#904");
 	}
 
 	public JiraRestApi getInnotasRestApi() throws URISyntaxException {
